@@ -91,6 +91,11 @@ void ESP1588::Loop()
 
 		int len=udp->read(packetBuffer,sizeof(packetBuffer));
 
+		if (len>0)
+		{
+			Serial.println(len);
+		}
+
 		if(len>=(int) sizeof(PTP_PACKET))
 		{
 			PTP_PACKET & pkt=*((PTP_PACKET *) packetBuffer);
@@ -147,6 +152,7 @@ void ESP1588::Loop()
 					trackerCandidate.FeedSync(pkt,port);
 
 				}
+				Serial.println("SYNC ");
 		//		csprintf("SYNC ");
 			}
 
