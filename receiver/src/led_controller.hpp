@@ -17,9 +17,8 @@ class LedController {
 
     static LedController* Create(const Config &config);
 
-    void SeekToStep(uint32_t step);
-    void StepSequence();
-    void UpdateLeds();
+    void SeekToStep(uint32_t to_step);
+    void StepSequence(bool update_leds=true);
 
   private:
 
@@ -31,4 +30,5 @@ class LedController {
     uint32_t step_to_change_at_[kNumChannels] = {0};
     File sequence_file_;
     uint32_t step_ = 0;
+    uint32_t next_update_step_ = 0;
 };

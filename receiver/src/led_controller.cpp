@@ -22,19 +22,31 @@ LedController* LedController::Create(const Config &config) {
     return led_controller;
 }
 
-void LedController::SeekToStep(uint32_t step) {
+void LedController::SeekToStep(uint32_t to_step) {
     sequence_file_.seek(0);
     step_ = 0;
-    for (int i = 0; i < step; ++i) {
-        StepSequence();
+    for (int i = 0; i < to_step; ++i) {
+        StepSequence(false);
     }
 }
 
-void LedController::StepSequence() {
+void LedController::StepSequence(bool update_leds) {
+    if (next_update_step_ != step_) {
+        step_++;
+        return;
+    }
+    
     if (sequence_file_.position() == sequence_file_.size()) {
         Serial.println(micros());
         sequence_file_.seek(0);
+        step_ = 0;
+        next_update_step_ = 0;
+        for (int i = 0; i < kNumChannels; i++) {
+            step_to_change_at_[i] = 0;
+        }
     }
+
+    bool fastled_change_required = false;
 
     for (int i = 0; i < kNumChannels; i++) {
         
@@ -55,11 +67,23 @@ void LedController::StepSequence() {
                 leds_[i / 3].b = buffer[0];
                 break;
             }
+
+            fastled_change_required = true;
         }
     }
-    step_++;
-}
 
-void LedController::UpdateLeds() {
-    FastLED.show();
+    if (fastled_change_required) {
+        next_update_step_ = -1;
+        for (int i = 0; i < kNumChannels; i++) {
+            if (step_to_change_at_[i] < next_update_step_) {
+                next_update_step_ = step_to_change_at_[i];
+            }
+        }
+    }
+
+    if (update_leds && fastled_change_required) {
+        FastLED.show();
+    }
+
+    step_++;
 }
