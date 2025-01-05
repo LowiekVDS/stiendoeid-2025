@@ -11,6 +11,7 @@ class LedController {
   public:
 
     struct Config {
+        int num_leds;
         String compressed_sequence_file_location;
     };
 

@@ -9,7 +9,7 @@ LedController* LedController::Create(const Config &config) {
     LedController* led_controller = new LedController();
     
     //TODO: split led config into multiple pins
-    FastLED.addLeds<SK6812, config::kDataPin, GRB>(led_controller->leds_, config::kNumLeds);    
+    FastLED.addLeds<SK6812, config::kDataPin, GRB>(led_controller->leds_, config.num_leds);    
 
     if (!LittleFS.begin()) {
         return nullptr;
