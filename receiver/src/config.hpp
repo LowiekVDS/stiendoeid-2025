@@ -11,9 +11,15 @@ constexpr auto kRadioTxRate = 5.0;
 
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
-constexpr auto kNumLeds = 30;
 constexpr auto kNumChannelsPerLed = 3;
-constexpr auto kDataPin = 15;
+constexpr int kNumLeds[6] = {30, 30, 30, 30, 30, 30};
+constexpr auto kTotalNumLeds = 180;
+constexpr int kDataPin_1 = 15;
+constexpr int kDataPin_2 = 15;
+constexpr int kDataPin_3 = 15;
+constexpr int kDataPin_4 = 15;
+constexpr int kDataPin_5 = 15;
+constexpr int kDataPin_6 = 15;
 
 constexpr auto kUpdateFrequency = 40.0;
 

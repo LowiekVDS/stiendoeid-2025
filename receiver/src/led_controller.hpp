@@ -24,11 +24,11 @@ class LedController {
 
   private:
 
-    static const auto kNumChannels = config::kNumLeds * config::kNumChannelsPerLed;
+    static const auto kNumChannels = config::kTotalNumLeds * config::kNumChannelsPerLed;
 
     LedController() = default;
 
-    CRGB leds_[config::kNumLeds]; 
+    CRGB leds_[config::kTotalNumLeds]; 
     uint32_t step_to_change_at_[kNumChannels] = {0};
     File sequence_file_;
     uint32_t step_ = 0;

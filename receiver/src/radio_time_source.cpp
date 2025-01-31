@@ -19,7 +19,7 @@ RadioTimeSource* RadioTimeSource::Create(const Config &config) {
 
 void RadioTimeSource::Sync() {
 
-    receiver->waitAvailableTimeout(200);
+    receiver->waitAvailableTimeout(1000);
 
     uint8_t buf[4];
     uint8_t len = sizeof(buf);
