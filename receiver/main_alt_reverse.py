@@ -1,6 +1,6 @@
 import csv
 
-input_file = open('output.txt', 'r')
+input_file = open('output_js.txt', 'r')
 
 NUM_OUTPUTS = 90
 
@@ -22,7 +22,7 @@ while current_delta < num_deltas:
             current_value_to_output[output_nr], current_length_to_output[output_nr] = map(int, delta)
             current_length_to_output[output_nr] += current_step            
             current_delta += 1
-
+    
         output_file.write(f'{current_value_to_output[output_nr]:03d}')        
         if output_nr != NUM_OUTPUTS - 1:
             output_file.write(',')

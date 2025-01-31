@@ -14,11 +14,14 @@ class RadioTimeSource {
 
     static RadioTimeSource* Create(const Config &config);
     void Sync();
-    unsigned long GetMicros() const { return micros() + reference_micros_; }
+    unsigned long GetReferenceMillis() const { return reference_millis_; }
+    
+    void RadioTimeMock(unsigned long micros);
 
   private:
     RadioTimeSource() = default;
-
-    unsigned long reference_micros_ = 0;
+    
+    Config config_ = {};
+    unsigned long reference_millis_ = 0;
     RH_ASK* receiver = nullptr;
 };

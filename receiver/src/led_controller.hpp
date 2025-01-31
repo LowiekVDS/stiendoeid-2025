@@ -20,6 +20,8 @@ class LedController {
     void SeekToStep(uint32_t to_step);
     void StepSequence(bool update_leds=true);
 
+    uint32_t Step() const { return step_; }
+
   private:
 
     static const auto kNumChannels = config::kNumLeds * config::kNumChannelsPerLed;

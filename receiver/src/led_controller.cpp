@@ -10,8 +10,9 @@ LedController* LedController::Create(const Config &config) {
     
     //TODO: split led config into multiple pins
     FastLED.addLeds<SK6812, config::kDataPin, GRB>(led_controller->leds_, config.num_leds);    
+    FastLED.setBrightness(255);
 
-    if (!LittleFS.begin()) {
+    if (!LittleFS.begin(true, "/littlefs")) {//, 10, "ffat")) {
         return nullptr;
     }
     led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
@@ -37,7 +38,6 @@ void LedController::StepSequence(bool update_leds) {
     }
     
     if (sequence_file_.position() == sequence_file_.size()) {
-        Serial.println(micros());
         sequence_file_.seek(0);
         step_ = 0;
         next_update_step_ = 0;
