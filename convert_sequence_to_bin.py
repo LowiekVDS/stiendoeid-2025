@@ -15,7 +15,7 @@ def parse_line(line):
         current_values.append(output_val)
     return current_values
 
-NUM_OUTPUTS = 90
+NUM_OUTPUTS = 900
 
 file_size = 0
 running_lengths = [1] * NUM_OUTPUTS

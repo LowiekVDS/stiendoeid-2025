@@ -6,8 +6,6 @@
 #include "config.hpp"
 #include "radio_time_source.hpp"
 
-#define MOCK_RADIO true
-
 bool serial_mode = false;
 
 TaskHandle_t sequence_handling_task_handle;
@@ -56,6 +54,7 @@ void SequenceHandlingTask(void *params) {
 }
 
 void SequenceHandlingTaskFromSerial(void *params) {
+    Serial.println("Serial mode starting.");
     CRGB leds[config::kTotalNumLeds];
     FastLED.addLeds<SK6812, config::kDataPin_1, GRB>(leds, 0, config::kNumLeds[0]);
     FastLED.addLeds<SK6812, config::kDataPin_2, GRB>(leds, config::kNumLeds[0], config::kNumLeds[1]);
@@ -64,6 +63,8 @@ void SequenceHandlingTaskFromSerial(void *params) {
     FastLED.addLeds<SK6812, config::kDataPin_5, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3], config::kNumLeds[4]);
     FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
     
+    Serial.println("Serial mode started.");
+
     auto kNumChannels = config::kNumChannelsPerLed * config::kTotalNumLeds;
     uint8_t buffer[kNumChannels];
     while (true) {
@@ -84,11 +85,12 @@ void SequenceHandlingTaskFromSerial(void *params) {
         FastLED.show();
 
         vTaskDelay(pdMS_TO_TICKS(1));
+        Serial.println("Serial mode");
     }
 }
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(921600);
 
     radio_time_queue_handle = xQueueCreate(1, sizeof(unsigned long));
     radio_time_source = RadioTimeSource::Create({
@@ -114,7 +116,6 @@ void loop() {
             Serial.println("Serial input detected, switching to manual mode");
             
             vTaskDelete(sequence_handling_task_handle);
-            vTaskDelete(time_sync_handling_task_handle);
             xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
                                     4096, NULL, 1, &sequence_handling_task_handle, 1);
 
@@ -122,15 +123,18 @@ void loop() {
         }
     }
 
-    radio_time_source->Sync();
+    if (!serial_mode) {
 
-    Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis() + millis());
+        radio_time_source->Sync();
 
-    const unsigned long reference_millis = radio_time_source->GetReferenceMillis();
-    xQueueOverwrite(radio_time_queue_handle, &reference_millis);
+        Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis() + millis());
 
-    BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
-    if (!xWasDelayed) {
-        Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
+        const unsigned long reference_millis = radio_time_source->GetReferenceMillis();
+        xQueueOverwrite(radio_time_queue_handle, &reference_millis);
+
+        BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
+        if (!xWasDelayed) {
+            Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
+        }
     }
 }

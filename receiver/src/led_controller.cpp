@@ -15,9 +15,9 @@ LedController* LedController::Create(const Config &config) {
     FastLED.addLeds<SK6812, config::kDataPin_4, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2], config::kNumLeds[3]);
     FastLED.addLeds<SK6812, config::kDataPin_5, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3], config::kNumLeds[4]);
     FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
-    FastLED.setBrightness(255);
+    FastLED.setBrightness(config::kBrightness);
 
-    if (!LittleFS.begin(true, "/littlefs")) {//, 10, "ffat")) {
+    if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
         return nullptr;
     }
     led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");

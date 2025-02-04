@@ -3,7 +3,7 @@ import time
 
 # Open the serial port
 ser = serial.Serial(
-    port='/dev/ttyACM0',      # Replace 'COM1' with your port name
+    port='/dev/ttyACM1',      # Replace 'COM1' with your port name
     baudrate=115200,    # Set the baud rate
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
@@ -12,6 +12,7 @@ ser = serial.Serial(
 
 # Check if the serial port is open
 is_on = False
+num_leds = 10
 if ser.isOpen():
     print("Serial port is open.")
     try:
@@ -19,9 +20,9 @@ if ser.isOpen():
             # Data to send (90 bytes)
             
             if is_on:
-                data = [255, 255, 0] * 30
+                data = [255, 255, 0] * num_leds
             else:
-                data = [0, 0, 0] * 30
+                data = [0, 0, 0] * num_leds
             
             is_on = not is_on
             # Write data to serial port
