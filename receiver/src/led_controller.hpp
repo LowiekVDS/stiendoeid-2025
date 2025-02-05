@@ -19,6 +19,7 @@ class LedController {
 
     void SeekToStep(uint32_t to_step);
     void StepSequence(bool update_leds=true);
+    bool SetLedsFromBuffer(uint8_t* buffer, int buffer_size);
 
     uint32_t Step() const { return step_; }
 

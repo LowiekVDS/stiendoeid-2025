@@ -6,8 +6,6 @@
 #include "config.hpp"
 #include "radio_time_source.hpp"
 
-bool serial_mode = false;
-
 TaskHandle_t sequence_handling_task_handle;
 TaskHandle_t time_sync_handling_task_handle;
 
@@ -16,16 +14,9 @@ QueueHandle_t radio_time_queue_handle;
 RadioTimeSource* radio_time_source = nullptr;
 TickType_t xLastWakeTime;
 
-void SequenceHandlingTask(void *params) {
-    auto led_controller = LedController::Create({
-        config::kTotalNumLeds, 
-        config::kCompressedSequenceFileLocation
-    });
-    if (led_controller == nullptr) {
-        Serial.println("Failed to create led controller");
-        return;
-    }
+LedController* led_controller = nullptr;
 
+void SequenceHandlingTask(void *params) {
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
@@ -54,43 +45,22 @@ void SequenceHandlingTask(void *params) {
 }
 
 void SequenceHandlingTaskFromSerial(void *params) {
-    Serial.println("Serial mode starting.");
-    CRGB leds[config::kTotalNumLeds];
-    FastLED.addLeds<SK6812, config::kDataPin_1, GRB>(leds, 0, config::kNumLeds[0]);
-    FastLED.addLeds<SK6812, config::kDataPin_2, GRB>(leds, config::kNumLeds[0], config::kNumLeds[1]);
-    FastLED.addLeds<SK6812, config::kDataPin_3, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1], config::kNumLeds[2]);
-    FastLED.addLeds<SK6812, config::kDataPin_4, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2], config::kNumLeds[3]);
-    FastLED.addLeds<SK6812, config::kDataPin_5, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3], config::kNumLeds[4]);
-    FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
-    
-    Serial.println("Serial mode started.");
-
-    auto kNumChannels = config::kNumChannelsPerLed * config::kTotalNumLeds;
+    const int kNumChannels = config::kNumChannelsPerLed * config::kTotalNumLeds;
     uint8_t buffer[kNumChannels];
     while (true) {
-        Serial.readBytes(buffer, kNumChannels);
-        for (int i = 0; i < kNumChannels; i++) {
-            switch (i % 3) {
-            case 0:
-                leds[i / 3].r = buffer[i];
-                break;
-            case 1:
-                leds[i / 3].g = buffer[i];
-                break;
-            case 2:
-                leds[i / 3].b = buffer[i];
-                break;
-            }
+        Serial.readBytes(buffer, kNumChannels);    
+        if (!led_controller->SetLedsFromBuffer(buffer, kNumChannels)) {
+            Serial.println("Failed to set leds from buffer");
         }
-        FastLED.show();
-
-        vTaskDelay(pdMS_TO_TICKS(1));
-        Serial.println("Serial mode");
     }
 }
 
 void setup() {
     Serial.begin(921600);
+    Serial.setRxBufferSize(4096);
+    Serial.setTimeout(100000);
+
+    delay(2000);
 
     radio_time_queue_handle = xQueueCreate(1, sizeof(unsigned long));
     radio_time_source = RadioTimeSource::Create({
@@ -103,27 +73,30 @@ void setup() {
         while (true) {}
     }
 
-    xTaskCreatePinnedToCore(SequenceHandlingTask, "SequenceHandlingTask", 4096, NULL, 1, &sequence_handling_task_handle, 1);    
+    led_controller = LedController::Create({
+        config::kTotalNumLeds, 
+        config::kCompressedSequenceFileLocation
+    });
+    if (led_controller == nullptr) {
+        Serial.println("Failed to create led controller");
+        return;
+    }
+
+    if (SERIAL_MODE) {
+        xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
+                                        4096, NULL, 1, &sequence_handling_task_handle, 1);
+    } else {
+        xTaskCreatePinnedToCore(SequenceHandlingTask, "SequenceHandlingTask", 4096, NULL, 1, &sequence_handling_task_handle, 1);
+    }
 }
 
 void loop() {
-    if (Serial.available() && !serial_mode) {
-        if (MOCK_RADIO) {
+    if (!SERIAL_MODE) {
+        if (MOCK_RADIO && Serial.available()) {
             auto input = Serial.readStringUntil('\n');
             auto millis = input.toInt();
             radio_time_source->RadioTimeMock(millis);     
-        } else {
-            Serial.println("Serial input detected, switching to manual mode");
-            
-            vTaskDelete(sequence_handling_task_handle);
-            xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
-                                    4096, NULL, 1, &sequence_handling_task_handle, 1);
-
-            serial_mode = true;
         }
-    }
-
-    if (!serial_mode) {
 
         radio_time_source->Sync();
 

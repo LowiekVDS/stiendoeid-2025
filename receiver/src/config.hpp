@@ -3,6 +3,7 @@
 #include "string.h"
 
 #define MOCK_RADIO false
+#define SERIAL_MODE true
 
 namespace config {
 
@@ -14,8 +15,8 @@ constexpr auto kRadioTxRate = 5.0;
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
 constexpr auto kNumChannelsPerLed = 3;
-constexpr int kNumLeds[6] = {50, 50, 50, 50, 50, 50};
-constexpr auto kTotalNumLeds = 300;
+constexpr int kNumLeds[6] = {200, 200, 200, 54, 0, 0};
+constexpr auto kTotalNumLeds = 654;
 constexpr int kDataPin_1 = 6;
 constexpr int kDataPin_2 = 7;
 constexpr int kDataPin_3 = 15;
@@ -25,6 +26,8 @@ constexpr int kDataPin_6 = 18;
 
 constexpr auto kBrightness = 255;
 
+// Note: de frequentie is beperkt door de maximale aantal leds in een hardwarekanaal.
+// Meerbepaald moet dit gelden: kUpdateFrequency < 25000 / (max(kNumLeds[i == 1..6])) 
 constexpr auto kUpdateFrequency = 40.0;
 
 constexpr auto kAllowedFrameDifference = 3;

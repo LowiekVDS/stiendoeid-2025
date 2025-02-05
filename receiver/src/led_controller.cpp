@@ -6,9 +6,9 @@
 #include "config.hpp"
 
 LedController* LedController::Create(const Config &config) {
+    Serial.println("Creating led controller");
     LedController* led_controller = new LedController();
-    
-    CRGB leds[config::kTotalNumLeds];
+    Serial.println("Created led controller done");
     FastLED.addLeds<SK6812, config::kDataPin_1, GRB>(led_controller->leds_, 0, config::kNumLeds[0]);
     FastLED.addLeds<SK6812, config::kDataPin_2, GRB>(led_controller->leds_, config::kNumLeds[0], config::kNumLeds[1]);
     FastLED.addLeds<SK6812, config::kDataPin_3, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1], config::kNumLeds[2]);
@@ -34,6 +34,27 @@ void LedController::SeekToStep(uint32_t to_step) {
     for (int i = 0; i < to_step; ++i) {
         StepSequence(false);
     }
+}
+
+bool LedController::SetLedsFromBuffer(uint8_t* buffer, int buffer_size) {
+    if (buffer_size != kNumChannels) {
+        return false;
+    }
+    for (int i = 0; i < kNumChannels; i++) {
+        switch (i % 3) {
+        case 0:
+            leds_[i / 3].r = buffer[i];
+            break;
+        case 1:
+            leds_[i / 3].g = buffer[i];
+            break;
+        case 2:
+            leds_[i / 3].b = buffer[i];
+            break;
+        }
+    }
+    FastLED.show();
+    return true;
 }
 
 void LedController::StepSequence(bool update_leds) {
