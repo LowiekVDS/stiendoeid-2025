@@ -15,7 +15,7 @@ class Alternating : public Effect {
       size_t colors_size = 0;
     };
 
-    Alternating(const Config& config) : config_(config) {};
+    Alternating(const Config& config, CRGB* leds, int num_leds);
 
     void update() override final;
 
