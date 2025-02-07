@@ -12,7 +12,7 @@ class Alternating : public Effect {
       bool is_static = false;
       int interval = 20; // In steps
       size_t colors_size = 0;
-      CRGB* colors;
+      CRGB colors[16];
     };
 
     Alternating(const Config& config, CRGB* leds, int num_leds);

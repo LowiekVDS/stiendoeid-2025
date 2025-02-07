@@ -5,6 +5,7 @@
 #include <FastLED.h>
 #include "LittleFS.h"
 
+#include "effects/effect.hpp"
 #include "config.hpp"
 
 class LedController {
@@ -28,6 +29,9 @@ class LedController {
     static const auto kNumChannels = config::kTotalNumLeds * config::kNumChannelsPerLed;
 
     LedController() = default;
+
+    effects::Effect* effects_[256];
+    uint8_t num_actual_effects_ = 0;
 
     CRGB leds_[config::kTotalNumLeds]; 
     uint32_t step_to_change_at_[kNumChannels] = {0};

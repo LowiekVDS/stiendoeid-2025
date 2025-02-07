@@ -3,12 +3,42 @@
 #include <FastLED.h>
 #include "LittleFS.h"
 
+#include "effects/all.hpp"
 #include "config.hpp"
 
+/**
+ * Format of a sequence file.
+ * 
+ * Per line:
+ * - 2 bytes: length of this iteration in steps.
+ * - 1 byte: number of effect objects
+ * - For each effect object:
+ *     - 1 byte: effect type
+ *     - 2 bytes: start led number
+ *     - 2 bytes: end led number 
+ *     - 1 byte: length of configuration (=N)
+ *     - N bytes: configuration
+ */
+
+namespace {
+
+enum EffectType {
+    Alternating,
+    CandleFlicker,
+    Chase,
+    Dissolve,
+    LipSync,
+    Pulse,
+    SetLevel,
+    Spin,
+    Twinkle,
+    Wipe
+};
+
+} // namespace
+
 LedController* LedController::Create(const Config &config) {
-    Serial.println("Creating led controller");
     LedController* led_controller = new LedController();
-    Serial.println("Created led controller done");
     FastLED.addLeds<SK6812, config::kDataPin_1, GRB>(led_controller->leds_, 0, config::kNumLeds[0]);
     FastLED.addLeds<SK6812, config::kDataPin_2, GRB>(led_controller->leds_, config::kNumLeds[0], config::kNumLeds[1]);
     FastLED.addLeds<SK6812, config::kDataPin_3, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1], config::kNumLeds[2]);
@@ -23,6 +53,9 @@ LedController* LedController::Create(const Config &config) {
     led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
     if (!led_controller->sequence_file_) {
         return nullptr;
+    }
+    for (int i = 0; i < 256; ++i) {
+        led_controller->effects_[i] = nullptr;
     }
 
     return led_controller;
@@ -58,56 +91,63 @@ bool LedController::SetLedsFromBuffer(uint8_t* buffer, int buffer_size) {
 }
 
 void LedController::StepSequence(bool update_leds) {
-    if (next_update_step_ != step_) {
-        step_++;
-        return;
-    }
-    
+
     if (sequence_file_.position() == sequence_file_.size()) {
         sequence_file_.seek(0);
         step_ = 0;
         next_update_step_ = 0;
-        for (int i = 0; i < kNumChannels; i++) {
-            step_to_change_at_[i] = 0;
-        }
     }
 
-    bool fastled_change_required = false;
+    if (step_ == next_update_step_) {
 
-    for (int i = 0; i < kNumChannels; i++) {
-        
-        if (step_to_change_at_[i] == step_) {
-            uint8_t buffer[2];
-            sequence_file_.read(buffer, 2);
+        for (int i = 0; i < num_actual_effects_; ++i) {
+            delete effects_[i];
+        }
 
-            step_to_change_at_[i] += buffer[1];
+        uint16_t delta_length; 
+        sequence_file_.read((uint8_t*)&delta_length, 2);
+        uint8_t num_effects;
+        sequence_file_.read(&num_effects, 1);
 
-            switch (i % 3) {
-            case 0:
-                leds_[i / 3].r = buffer[0];
-                break;
-            case 1:
-                leds_[i / 3].g = buffer[0];
-                break;
-            case 2:
-                leds_[i / 3].b = buffer[0];
+        for (int i = 0; i < num_effects; ++i) {
+            uint8_t effect_type;
+            sequence_file_.read(&effect_type, 1);
+            uint16_t start_led;
+            sequence_file_.read((uint8_t*)&start_led, 2);
+            uint16_t end_led;
+            sequence_file_.read((uint8_t*)&end_led, 2);
+            uint8_t config_length;
+            sequence_file_.read(&config_length, 1);
+            uint8_t config_as_bytes[config_length];
+            sequence_file_.read(config_as_bytes, config_length);
+            
+            if (effect_type == EffectType::Alternating) {
+                effects::Alternating::Config config;
+                assert(config_length == sizeof(effects::Alternating::Config));
+                sequence_file_.read((uint8_t*)&config, config_length);
+                effects_[i] = new effects::Alternating(config, leds_ + start_led, end_led - start_led + 1);
+            } else if (effect_type == EffectType::SetLevel) {
+                effects::SetLevel::Config config;
+                assert(config_length == sizeof(effects::SetLevel::Config));
+                sequence_file_.read((uint8_t*)&config, config_length);
+                effects_[i] = new effects::SetLevel(config, leds_ + start_led, end_led - start_led + 1);
+            } else {
+                // By default, set black because not supported :(.
+                const effects::SetLevel::Config config = {CRGB::Black};
+                effects_[i] = new effects::SetLevel(config, leds_ + start_led, end_led - start_led + 1);
                 break;
             }
-
-            fastled_change_required = true;
         }
+
+        next_update_step_ += delta_length;
+        num_actual_effects_ = num_effects;
     }
 
-    if (fastled_change_required) {
-        next_update_step_ = -1;
-        for (int i = 0; i < kNumChannels; i++) {
-            if (step_to_change_at_[i] < next_update_step_) {
-                next_update_step_ = step_to_change_at_[i];
-            }
-        }
+    for (int i = 0; i < num_actual_effects_; ++i) {
+        effects_[i]->update();    
     }
 
-    if (update_leds && fastled_change_required) {
+    if (update_leds) {
         FastLED.show();
     }
 

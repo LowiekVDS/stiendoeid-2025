@@ -1,5 +1,3 @@
-#pragma once
-
 #include "FastLED.h"
 
 #include "set_level.hpp"
