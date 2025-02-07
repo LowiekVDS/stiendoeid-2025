@@ -1,4 +1,4 @@
-#include "src/effects/alternating.hpp"
+#include "alternating.hpp"
 
 namespace effects {
 
@@ -9,7 +9,7 @@ Alternating::Alternating(const Config& config, CRGB* leds, int num_leds) : Effec
 }
 
 void Alternating::update() {
-    if (config.is_static) {
+    if (config_.is_static) {
       return;
     }
 

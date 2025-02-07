@@ -2,7 +2,7 @@
 
 #include "FastLED.h"
 
-#include "src/effects/effect.hpp"
+#include "effect.hpp"
 
 namespace effects {
 
@@ -11,8 +11,8 @@ class Alternating : public Effect {
     struct Config {
       bool is_static = false;
       int interval = 20; // In steps
-      CRGB colors[] = {};
       size_t colors_size = 0;
+      CRGB* colors;
     };
 
     Alternating(const Config& config, CRGB* leds, int num_leds);

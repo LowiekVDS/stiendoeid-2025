@@ -2,7 +2,7 @@
 
 #include "FastLED.h"
 
-#include "src/effects/effect.hpp"
+#include "effect.hpp"
 
 namespace effects {
 

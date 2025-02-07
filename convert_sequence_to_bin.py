@@ -15,7 +15,7 @@ def parse_line(line):
         current_values.append(output_val)
     return current_values
 
-NUM_OUTPUTS = 900
+NUM_OUTPUTS = 654 * 3
 
 file_size = 0
 running_lengths = [1] * NUM_OUTPUTS
@@ -30,6 +30,7 @@ running_lengths = [0] * NUM_OUTPUTS
 original_sequence_file = open(input_filename, 'r')
 original_sequence_csv = csv.reader(original_sequence_file)
 delta_indices = [0] * NUM_OUTPUTS
+num_lines = 0
 for i, outputs in enumerate(original_sequence_csv):
 
     for output_nr, output in enumerate(outputs):
@@ -43,6 +44,8 @@ for i, outputs in enumerate(original_sequence_csv):
         running_lengths[output_nr] += 1
         previous_outputs[output_nr] = output
 
+    num_lines += 1
+
 for delta in deltas_running_lengths_and_outputs:
     file_size += 2
     output_bin_file.write(bytes([int(delta[0]), int(delta[1])]))
@@ -54,5 +57,5 @@ if file_size > 4 * 1e6:
     exit(1)
 
 print(f"Theoretical file size: {file_size} bytes")
-compression_ratio = 1 - file_size / (6241 * 90)
+compression_ratio = 1 - file_size / (num_lines * NUM_OUTPUTS)
 print(f"Compression ratio: {compression_ratio * 100:.2f}%")
