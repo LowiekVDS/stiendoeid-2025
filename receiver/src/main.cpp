@@ -6,6 +6,8 @@
 #include "config.hpp"
 #include "radio_time_source.hpp"
 
+#include "effects/all.hpp"
+
 TaskHandle_t sequence_handling_task_handle;
 TaskHandle_t time_sync_handling_task_handle;
 
@@ -16,31 +18,101 @@ TickType_t xLastWakeTime;
 
 LedController* led_controller = nullptr;
 
+using namespace effects;
+
 void SequenceHandlingTask(void *params) {
+
+    Alternating::Config config{
+        .is_static = false,
+        .interval = 20,
+        .colors = {
+            {
+                .colorGradient = {
+                    .alpha_points = {
+                        {0.5, 0.0, 1.0},
+                        {0.5, 1.0, 1.0},
+                    },
+                    .color_points = {
+                        {0.5, 0.0, {255, 0, 0}}
+                    },
+                },
+                .brightness = {
+                    {0.0, 1.0},
+                    {1.0, 1.0},
+                },
+            },
+            {
+                .colorGradient = {
+                    .alpha_points = {
+                        {0.5, 0.0, 1.0},
+                        {0.5, 1.0, 1.0},
+                    },
+                    .color_points = {
+                        {1.0, 0.0, {0, 255, 0}}
+                    },
+                },
+                .brightness = {
+                    {0.0, 1.0},
+                    {1.0, 1.0},
+                },
+            },
+            {
+                .colorGradient = {
+                    .alpha_points = {},
+                    .color_points = {
+                        {0.5, 0.0, {255, 0, 0}},
+                        {0.5, 0.5, {0, 255, 0}},
+                        {0.75, 1.0, {0, 0, 255}}
+                    },
+                },
+                .brightness = {}
+            },
+        },
+    };
+    auto effect = Alternating(config, led_controller->leds_, config::kTotalNumLeds);
+
+    // auto setlevel_config = SetLevel::Config{
+    //     .color = {255, 255, 0},
+    // };
+    // auto effect = SetLevel(setlevel_config, led_controller->leds_, config::kTotalNumLeds);
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
     while (true) {
 
-        xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
-        const unsigned long radio_sequence_time_millis = reference_millis + millis();
+        // xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
+        // const unsigned long radio_sequence_time_millis = reference_millis + millis();
 
-        unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
-        if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-                led_controller->StepSequence(false);
-                local_sequence_time_millis = led_controller->Step() * period_millis;
-            }
-        } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
-        }
+        // unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
+        // if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+        //     while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+        //         led_controller->StepSequence(false);
+        //         local_sequence_time_millis = led_controller->Step() * period_millis;
+        //     }
+        // } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+        //     led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
+        // }
 
-        led_controller->StepSequence(true);
+        // led_controller->StepSequence(true);
     
-        BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
-        if (!xWasDelayed) {
-            Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+        unsigned long time = millis();
+
+        effect.update();
+        FastLED.show();
+
+        unsigned time_to_sleep = period_millis - (millis() - time);
+        if (time_to_sleep > 0) {
+            delay(time_to_sleep);
+        } else {
+            Serial.println("SequenceHandlingTask was NOT delayed!");
         }
+
+        // BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
+        // if (!xWasDelayed) {
+        //     Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+        //     Serial.println("xLastWakeTime: " + String(xLastWakeTime));
+        //     Serial.println(config::kUpdateFrequency);
+        // }
     }
 }
 
@@ -56,9 +128,9 @@ void SequenceHandlingTaskFromSerial(void *params) {
 }
 
 void setup() {
-    Serial.begin(921600);
-    Serial.setRxBufferSize(4096);
-    Serial.setTimeout(100000);
+    // Serial.setRxBufferSize(4096);
+    // Serial.setTimeout(100000);
+    Serial.begin(115200);
 
     delay(2000);
 
@@ -107,7 +179,7 @@ void loop() {
 
         BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
         if (!xWasDelayed) {
-            Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
+            //Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
         }
     }
 }

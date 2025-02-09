@@ -3,7 +3,7 @@
 #include "string.h"
 
 #define MOCK_RADIO false
-#define SERIAL_MODE true
+#define SERIAL_MODE false
 
 namespace config {
 
@@ -15,10 +15,10 @@ constexpr auto kRadioTxRate = 5.0;
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
 constexpr auto kNumChannelsPerLed = 3;
-constexpr int kNumLeds[6] = {200, 200, 200, 54, 0, 0};
+constexpr int kNumLeds[6] = {30, 0, 0, 0, 0, 0}; // {200, 200, 200, 54, 0, 0};
 constexpr auto kTotalNumLeds = 654;
-constexpr int kDataPin_1 = 6;
-constexpr int kDataPin_2 = 7;
+constexpr int kDataPin_1 = 25;
+constexpr int kDataPin_2 = 26;
 constexpr int kDataPin_3 = 15;
 constexpr int kDataPin_4 = 16;
 constexpr int kDataPin_5 = 17;

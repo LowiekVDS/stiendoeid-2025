@@ -23,7 +23,7 @@ class LedController {
     bool SetLedsFromBuffer(uint8_t* buffer, int buffer_size);
 
     uint32_t Step() const { return step_; }
-
+    CRGB leds_[config::kTotalNumLeds]; 
   private:
 
     static const auto kNumChannels = config::kTotalNumLeds * config::kNumChannelsPerLed;
@@ -33,7 +33,7 @@ class LedController {
     effects::Effect* effects_[256];
     uint8_t num_actual_effects_ = 0;
 
-    CRGB leds_[config::kTotalNumLeds]; 
+    
     uint32_t step_to_change_at_[kNumChannels] = {0};
     File sequence_file_;
     uint32_t step_ = 0;
