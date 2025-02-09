@@ -8,3 +8,4 @@
 #include "pulse.hpp"
 #include "strobe.hpp"
 #include "chase.hpp"
+#include "dissolve.hpp"

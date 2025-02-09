@@ -22,32 +22,46 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Chase::Config config{
+    Dissolve::Config config{
         .interval = 40 * 3,
-        .color_handling = Chase::ColorHandling::kGradientThruEffect,
-        .minimum_brightnes = 50,
-        .direction = {
+        .is_random = true,
+        .flip = false,
+        .both_directions = false,
+        .density = {
             {0.0, 1.0},
-            // {0.5, 0.5},
+            // {0.5, 0.0},
             {1.0, 0.0},
         },
-        .pulse_overlap = 10,
-        .color = {
-            .colorGradient = {
-                .alpha_points = {},
-                .color_points = {
-                    {0.5, 0.0, {255, 0, 0}},
-                    {0.5, 1.0, {0, 255, 0}},
+        .colors = {
+            {
+                .colorGradient = {
+                    .alpha_points = {},
+                    .color_points = {
+                        {0.5, 0.0, {255, 0, 0}},
+                    },
+                },
+                .brightness = {
+                    {0.0, 1.0},
+                    {0.7, 0.0}
                 },
             },
-            .brightness = {
-                {0.0, 0.1},
-                {0.5, 1.0},
-                {1.0, 1.0},
-            },
+            {
+                .colorGradient = {
+                    .alpha_points = {},
+                    .color_points = {
+                        {0.5, 0.0, {0, 255, 0}},
+                    },
+                },
+                .brightness = {
+                    {0.0, 1.0},
+                    {0.7, 0.0}
+                },
+            }
         }, 
+        .random_color_order = false,
+        .alternate_colors = true,
     };
-    auto effect = Chase(config, led_controller->leds_, config::kNumLeds[0]);
+    auto effect = Dissolve(config, led_controller->leds_, config::kNumLeds[0]);
 
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;

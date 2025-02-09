@@ -138,9 +138,18 @@ RGBColor ApplyBrightnessCurve(const RGBColor& color, const std::vector<CurvePoin
         return color;
     }
 
+    if (brightness_curve.size() == 1) {
+        float factor = brightness_curve[0].Y;
+        return {
+            static_cast<uint8_t>(color.r * factor),
+            static_cast<uint8_t>(color.g * factor),
+            static_cast<uint8_t>(color.b * factor)
+        };
+    }
+
     // Find prev and next curve points
     CurvePoint prev = brightness_curve[0];
-    CurvePoint next = prev;
+    CurvePoint next = brightness_curve[1];
     for (int i = 0; i < brightness_curve.size(); ++i) {
         next = brightness_curve[i];
         if (position <= next.X) {
@@ -156,7 +165,12 @@ RGBColor ApplyBrightnessCurve(const RGBColor& color, const std::vector<CurvePoin
         prev = next;
     }
 
-    return color;
+    const float factor = brightness_curve.back().Y;
+    return {
+        static_cast<uint8_t>(color.r * factor),
+        static_cast<uint8_t>(color.g * factor),
+        static_cast<uint8_t>(color.b * factor)
+    };
 }
 
 RGBColor GetCRGBColorFromGradientLevelPair(const GradientLevelPair& gradient_level_pair, float position) {
