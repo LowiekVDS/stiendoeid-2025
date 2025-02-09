@@ -1,5 +1,3 @@
-#pragma once
-
 #include "pulse.hpp"
 
 namespace effects {

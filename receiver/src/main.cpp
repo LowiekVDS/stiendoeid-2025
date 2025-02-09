@@ -22,30 +22,33 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Pulse::Config config{
-        .interval = 20,
+    Strobe::Config config{
+        .interval = 40 * 3,
+        .cycle_time = 20,
+        .cycle_variation = {
+            {0.0, 0.2},
+            {1.0, 1.0},
+        },
+        .on_time = {
+            {0.0, 0.5},
+            {1.0, 0.5},
+        },
         .color = {
             .colorGradient = {
-                .alpha_points = {
-                    {0.5, 0.0, 1.0},
-                    {0.5, 1.0, 1.0},
-                },
+                .alpha_points = {},
                 .color_points = {
                     {0.5, 0.0, {255, 0, 0}}
                 },
             },
             .brightness = {
                 {0.0, 0.0},
-                {1.0, 1.0},
+                {0.5, 1.0},
+                {1.0, 0.5},
             },
         }, 
     };
-    auto effect = Pulse(config, led_controller->leds_, config::kTotalNumLeds);
+    auto effect = Strobe(config, led_controller->leds_, config::kTotalNumLeds);
 
-    // auto setlevel_config = SetLevel::Config{
-    //     .color = {255, 255, 0},
-    // };
-    // auto effect = SetLevel(setlevel_config, led_controller->leds_, config::kTotalNumLeds);
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;

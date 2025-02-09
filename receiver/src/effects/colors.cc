@@ -1,5 +1,6 @@
 #include "Arduino.h"
 
+#include "tools.hpp"
 #include "colors.hpp"
 
 namespace effects {
@@ -11,15 +12,6 @@ struct HSVColor {
     float s;  // Saturation [0, 1]
     float v;  // Value [0, 1]  
 };
-
-/**
- * Start: X-position of start
- * End: X-position of end
- * Factor: dy / dx
- */
-float interpolate(float start, float end, float factor) {
-    return start + (end - start) * factor;
-}
 
 HSVColor blendHSV(HSVColor color1, HSVColor color2, float t, float weight = 0.5) {
     // Adjust transition based on weight

@@ -6,3 +6,4 @@
 #include "pulse.hpp"
 #include "set_level.hpp"
 #include "pulse.hpp"
+#include "strobe.hpp"

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include "tools.hpp"
+
 #define MAX_ALPHA_POINTS 10
 #define MAX_COLOR_POINTS 10
 #define MAX_CURVE_POINTS 10
@@ -32,11 +34,6 @@ struct ColorPoint {
 struct ColorGradient {
     std::vector<AlphaPoint> alpha_points;
     std::vector<ColorPoint> color_points;
-};
-
-struct CurvePoint {
-    float X;
-    float Y;
 };
 
 struct GradientLevelPair {
