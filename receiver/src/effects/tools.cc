@@ -27,4 +27,28 @@ float GetCurrentCurveY(const std::vector<CurvePoint>& curve, float position) {
     return prev.Y;
 }
 
+template<typename T>
+int ParseVectorOfStructsFromBytes(const uint8_t* bytes, int size, std::vector<T>& structs) {
+    if (size <= 1) {
+        return 0;
+    }
+
+    int num_structs = bytes[0];
+    int struct_size = sizeof(T);
+    int structs_length = num_structs * struct_size;
+    if (size < structs_length + 1) {
+        return 0;
+    }
+
+    structs.clear();
+    for (int i = 0; i < num_structs; ++i) {
+        int offset = 1 + i * struct_size;
+        T s;
+        memcpy(&s, bytes + offset, struct_size);
+        structs.push_back(s);
+    }
+
+    return structs_length + 1;
+}
+
 } // namespace effect

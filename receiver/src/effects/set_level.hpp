@@ -3,14 +3,17 @@
 #include "FastLED.h"
 
 #include "effect.hpp"
+#include "colors.hpp"
 
 namespace effects {
 
 class SetLevel : public Effect {  
   public:
     struct Config {
-      CRGB color;
+      RGBColor color;
     };
+
+    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     SetLevel(const Config& config, CRGB* leds, int num_leds);
 

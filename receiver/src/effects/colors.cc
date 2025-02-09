@@ -179,4 +179,16 @@ RGBColor GetCRGBColorFromGradientLevelPair(const GradientLevelPair& gradient_lev
     return adjusted_color;
 };
 
+int ParseGradientLevelPairFromBytes(const uint8_t* bytes, int size, GradientLevelPair& gradient_level_pair) {
+    int offset = ParseVectorOfStructsFromBytes<ColorPoint>(bytes, size, gradient_level_pair.colorGradient.color_points);
+    if (offset == 0) {
+        return 0;
+    }
+    offset += ParseVectorOfStructsFromBytes<CurvePoint>(bytes + offset, size - offset, gradient_level_pair.brightness);
+    if (offset == 0) {
+        gradient_level_pair.colorGradient.color_points.clear();
+    }
+    return offset;
+}
+
 } // namespace effect

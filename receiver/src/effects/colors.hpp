@@ -13,12 +13,6 @@
 
 namespace effects {
 
-struct AlphaPoint {
-    float focus;
-    float position;
-    float alpha;
-};
-
 struct RGBColor {
     uint8_t r;
     uint8_t g;
@@ -32,7 +26,6 @@ struct ColorPoint {
 };
 
 struct ColorGradient {
-    std::vector<AlphaPoint> alpha_points;
     std::vector<ColorPoint> color_points;
 };
 
@@ -40,6 +33,11 @@ struct GradientLevelPair {
     ColorGradient colorGradient;
     std::vector<CurvePoint> brightness;
 };
+
+/**
+ * Returns the number of bytes read
+ */
+int ParseGradientLevelPairFromBytes(const uint8_t* bytes, int size, GradientLevelPair& gradient_level_pair);
 
 /**
  * position: float from 0 to 1

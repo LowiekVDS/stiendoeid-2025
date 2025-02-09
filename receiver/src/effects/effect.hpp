@@ -6,6 +6,7 @@ namespace effects {
 
 class Effect {
   public:
+
     Effect(CRGB* leds, int num_leds) : leds_(leds), num_leds_(num_leds) {};
     
     virtual void update() = 0;

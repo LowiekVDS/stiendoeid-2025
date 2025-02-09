@@ -22,46 +22,29 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Dissolve::Config config{
+    Twinkle::Config config{
         .interval = 40 * 3,
-        .is_random = true,
-        .flip = false,
-        .both_directions = false,
-        .density = {
-            {0.0, 1.0},
-            // {0.5, 0.0},
-            {1.0, 0.0},
-        },
-        .colors = {
+        .avg_pulse_interval = 10,
+        .coverage = 0.1,
+        .coverage_variation = 0.5,
+        .min_brightness = 0,
+        .max_brightness = 255,
+        .brightness_variation = 0.5,
+        .color_handling = Twinkle::ColorHandling::kGradientPerPulse,
+        .color = 
             {
                 .colorGradient = {
-                    .alpha_points = {},
                     .color_points = {
                         {0.5, 0.0, {255, 0, 0}},
+                        {0.5, 1.0, {0, 255, 0}},
                     },
                 },
                 .brightness = {
                     {0.0, 1.0},
-                    {0.7, 0.0}
                 },
             },
-            {
-                .colorGradient = {
-                    .alpha_points = {},
-                    .color_points = {
-                        {0.5, 0.0, {0, 255, 0}},
-                    },
-                },
-                .brightness = {
-                    {0.0, 1.0},
-                    {0.7, 0.0}
-                },
-            }
-        }, 
-        .random_color_order = false,
-        .alternate_colors = true,
     };
-    auto effect = Dissolve(config, led_controller->leds_, config::kNumLeds[0]);
+    auto effect = Twinkle(config, led_controller->leds_, config::kNumLeds[0]);
 
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;

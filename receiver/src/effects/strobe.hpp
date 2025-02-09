@@ -17,6 +17,8 @@ class Strobe : public Effect {
         GradientLevelPair color;
     };
 
+    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
+
     Strobe(const Config& config, CRGB* leds, int num_leds);
 
     void update() override final;

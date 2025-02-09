@@ -22,6 +22,30 @@ Dissolve::Dissolve(const Config& config, CRGB* leds, int num_leds)
     }
 }
 
+static Dissolve::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+    Dissolve::Config config;
+    if (size < 1) {
+        return config;
+    }
+
+    int offset = 0;
+    config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
+    config.is_random = bytes[offset++];
+    config.flip = bytes[offset++];
+    config.both_directions = bytes[offset++];
+    config.random_color_order = bytes[offset++];
+    config.alternate_colors = bytes[offset++];
+
+    offset += ParseVectorOfStructsFromBytes(bytes + offset, size - offset, config.density);
+    int num_colors = bytes[offset];
+    for (int i = 0; i < num_colors; ++i) {
+        GradientLevelPair gradient_level_pair;
+        offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, gradient_level_pair);
+        config.colors.push_back(gradient_level_pair);
+    }
+    return config;
+}
+
 void Dissolve::update() {
     if (current_step_ >= config_.interval) {
         current_step_ = 0;

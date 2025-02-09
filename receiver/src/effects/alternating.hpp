@@ -13,10 +13,12 @@ namespace effects {
 class Alternating : public Effect {  
   public:
     struct Config {
-      bool is_static;
       int interval;
+      bool is_static;
       std::vector<GradientLevelPair> colors;
     };
+
+    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     Alternating(const Config& config, CRGB* leds, int num_leds);
 

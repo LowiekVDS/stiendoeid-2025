@@ -7,7 +7,7 @@
 
 namespace effects {
 
-class Chase : public Effect {  
+class Twinkle : public Effect {  
   public:
     
     enum ColorHandling {
@@ -18,17 +18,20 @@ class Chase : public Effect {
     };
 
     struct Config {
-        int interval; // Total time the effect is active
+        int interval; // in steps
+        float avg_pulse_interval; // in steps
+        float coverage; // between 0 and 1
+        float coverage_variation;
+        uint8_t min_brightness;
+        uint8_t max_brightness;
+        float brightness_variation; // 0 and 1
         ColorHandling color_handling;
-        uint8_t minimum_brightnes;
-        std::vector<CurvePoint> direction;
-        int pulse_overlap; // in steps
         GradientLevelPair color;
     };
 
     static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
-    Chase(const Config& config, CRGB* leds, int num_leds);
+    Twinkle(const Config& config, CRGB* leds, int num_leds);
 
     void update() override final;
 
@@ -37,7 +40,8 @@ class Chase : public Effect {
     void SetBackgroundColors();
 
     Config config_;
-    int current_led_ = 0;
+    std::vector<int> pulses_start_step_;
+    std::vector<int> pulses_end_step_;
 };
 
 } // namespace effects

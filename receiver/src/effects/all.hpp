@@ -9,3 +9,4 @@
 #include "strobe.hpp"
 #include "chase.hpp"
 #include "dissolve.hpp"
+#include "twinkle.hpp"

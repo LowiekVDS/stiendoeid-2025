@@ -12,6 +12,18 @@ int clamp(int value, int min, int max) {
 
 } // namespace
 
+static Chase::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+    Chase::Config config;
+    int offset = 0;
+    config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
+    config.color_handling = static_cast<Chase::ColorHandling>(bytes[offset++]);
+    config.minimum_brightnes = bytes[offset++];
+    offset += ParseVectorOfStructsFromBytes<CurvePoint>(bytes + offset, size - offset, config.direction);
+    config.pulse_overlap = bytes[offset++];
+    offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, config.color);
+    return config;
+}
+
 
 void Chase::SetBackgroundColors() {
     if (config_.color_handling == ColorHandling::kGradientThruEffect) {

@@ -17,11 +17,13 @@ class Dissolve : public Effect {
         bool is_random;
         bool flip;
         bool both_directions;
-        std::vector<CurvePoint> density;
-        std::vector<GradientLevelPair> colors;
         bool random_color_order;
         bool alternate_colors; // group colors or color per step
+        std::vector<CurvePoint> density;
+        std::vector<GradientLevelPair> colors;
     };
+
+    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     Dissolve(const Config& config, CRGB* leds, int num_leds);
 
