@@ -22,54 +22,25 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Alternating::Config config{
-        .is_static = false,
+    Pulse::Config config{
         .interval = 20,
-        .colors = {
-            {
-                .colorGradient = {
-                    .alpha_points = {
-                        {0.5, 0.0, 1.0},
-                        {0.5, 1.0, 1.0},
-                    },
-                    .color_points = {
-                        {0.5, 0.0, {255, 0, 0}}
-                    },
+        .color = {
+            .colorGradient = {
+                .alpha_points = {
+                    {0.5, 0.0, 1.0},
+                    {0.5, 1.0, 1.0},
                 },
-                .brightness = {
-                    {0.0, 1.0},
-                    {1.0, 1.0},
+                .color_points = {
+                    {0.5, 0.0, {255, 0, 0}}
                 },
             },
-            {
-                .colorGradient = {
-                    .alpha_points = {
-                        {0.5, 0.0, 1.0},
-                        {0.5, 1.0, 1.0},
-                    },
-                    .color_points = {
-                        {1.0, 0.0, {0, 255, 0}}
-                    },
-                },
-                .brightness = {
-                    {0.0, 1.0},
-                    {1.0, 1.0},
-                },
+            .brightness = {
+                {0.0, 0.0},
+                {1.0, 1.0},
             },
-            {
-                .colorGradient = {
-                    .alpha_points = {},
-                    .color_points = {
-                        {0.5, 0.0, {255, 0, 0}},
-                        {0.5, 0.5, {0, 255, 0}},
-                        {0.75, 1.0, {0, 0, 255}}
-                    },
-                },
-                .brightness = {}
-            },
-        },
+        }, 
     };
-    auto effect = Alternating(config, led_controller->leds_, config::kTotalNumLeds);
+    auto effect = Pulse(config, led_controller->leds_, config::kTotalNumLeds);
 
     // auto setlevel_config = SetLevel::Config{
     //     .color = {255, 255, 0},

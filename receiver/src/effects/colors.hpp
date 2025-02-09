@@ -54,6 +54,8 @@ RGBColor GetColorAt(const ColorGradient& gradient, float position);
  */
 RGBColor ApplyBrightnessCurve(const RGBColor& color, const std::vector<CurvePoint>& brightness_curve, float position);
 
+RGBColor GetCRGBColorFromGradientLevelPair(const GradientLevelPair& gradient_level_pair, float position);
+
 } // namespace effect
 
 #endif // COLORS_HPP
