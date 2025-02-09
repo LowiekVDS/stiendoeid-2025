@@ -22,32 +22,32 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Strobe::Config config{
+    Chase::Config config{
         .interval = 40 * 3,
-        .cycle_time = 20,
-        .cycle_variation = {
-            {0.0, 0.2},
-            {1.0, 1.0},
+        .color_handling = Chase::ColorHandling::kGradientThruEffect,
+        .minimum_brightnes = 50,
+        .direction = {
+            {0.0, 1.0},
+            // {0.5, 0.5},
+            {1.0, 0.0},
         },
-        .on_time = {
-            {0.0, 0.5},
-            {1.0, 0.5},
-        },
+        .pulse_overlap = 10,
         .color = {
             .colorGradient = {
                 .alpha_points = {},
                 .color_points = {
-                    {0.5, 0.0, {255, 0, 0}}
+                    {0.5, 0.0, {255, 0, 0}},
+                    {0.5, 1.0, {0, 255, 0}},
                 },
             },
             .brightness = {
-                {0.0, 0.0},
+                {0.0, 0.1},
                 {0.5, 1.0},
-                {1.0, 0.5},
+                {1.0, 1.0},
             },
         }, 
     };
-    auto effect = Strobe(config, led_controller->leds_, config::kTotalNumLeds);
+    auto effect = Chase(config, led_controller->leds_, config::kNumLeds[0]);
 
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;

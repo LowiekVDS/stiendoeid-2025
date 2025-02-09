@@ -7,3 +7,4 @@
 #include "set_level.hpp"
 #include "pulse.hpp"
 #include "strobe.hpp"
+#include "chase.hpp"
