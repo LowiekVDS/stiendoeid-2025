@@ -22,7 +22,7 @@ Dissolve::Dissolve(const Config& config, CRGB* leds, int num_leds)
     }
 }
 
-static Dissolve::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Dissolve::Config Dissolve::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     Dissolve::Config config;
     if (size < 1) {
         return config;

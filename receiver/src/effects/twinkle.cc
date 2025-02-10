@@ -2,7 +2,7 @@
 
 namespace effects {
 
-static Twinkle::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Twinkle::Config Twinkle::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     Twinkle::Config config;
     int offset = 0;
     config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];

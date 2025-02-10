@@ -11,6 +11,12 @@ class Effect {
     
     virtual void update() = 0;
 
+    void ClearLeds() {
+        for (int i = 0; i < num_leds_; i++) {
+            leds_[i] = CRGB::Black;
+        }
+    }
+
   protected:
     CRGB* leds_ = nullptr;
     int num_leds_ = 0;

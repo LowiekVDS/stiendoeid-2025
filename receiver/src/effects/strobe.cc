@@ -38,7 +38,7 @@ void Strobe::update() {
     ++cycle_step_;
 }
 
-static Strobe::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Strobe::Config Strobe::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     Strobe::Config config;
     int offset = 0;
     config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];

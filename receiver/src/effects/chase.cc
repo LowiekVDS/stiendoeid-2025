@@ -12,7 +12,7 @@ int clamp(int value, int min, int max) {
 
 } // namespace
 
-static Chase::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Chase::Config Chase::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     Chase::Config config;
     int offset = 0;
     config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];

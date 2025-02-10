@@ -22,30 +22,6 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    Twinkle::Config config{
-        .interval = 40 * 3,
-        .avg_pulse_interval = 10,
-        .coverage = 0.1,
-        .coverage_variation = 0.5,
-        .min_brightness = 0,
-        .max_brightness = 255,
-        .brightness_variation = 0.5,
-        .color_handling = Twinkle::ColorHandling::kGradientPerPulse,
-        .color = 
-            {
-                .colorGradient = {
-                    .color_points = {
-                        {0.5, 0.0, {255, 0, 0}},
-                        {0.5, 1.0, {0, 255, 0}},
-                    },
-                },
-                .brightness = {
-                    {0.0, 1.0},
-                },
-            },
-    };
-    auto effect = Twinkle(config, led_controller->leds_, config::kNumLeds[0]);
-
     TickType_t xLastWakeTime;
     unsigned long reference_millis = 0;
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
@@ -64,13 +40,10 @@ void SequenceHandlingTask(void *params) {
         //     led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
         // }
 
-        // led_controller->StepSequence(true);
-    
         unsigned long time = millis();
 
-        effect.update();
-        FastLED.show();
-
+        led_controller->StepSequence(true);
+        
         unsigned time_to_sleep = period_millis - (millis() - time);
         if (time_to_sleep > 0) {
             delay(time_to_sleep);
@@ -152,36 +125,5 @@ void loop() {
         if (!xWasDelayed) {
             //Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
         }
-    }
-
-    const uint8_t data[] =  {0x00, 0x00, 0x00, 0x64, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x80, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0xFF, 0x00, 0x80, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, };
-    auto alternating_config = Alternating::ParseConfigFromBytes(data, sizeof(data));
-
-    // Print alternating_config
-    Serial.println("interval: " + String(alternating_config.interval));
-    Serial.println("is_static: " + String(alternating_config.is_static));
-    Serial.println("colors.size(): " + String(alternating_config.colors.size()));
-    for (const auto& gradient_level_pair : alternating_config.colors) {
-        Serial.println("colorGradient.color_points.size(): " + String(gradient_level_pair.colorGradient.color_points.size()));
-        for (const auto& color_point : gradient_level_pair.colorGradient.color_points) {
-            Serial.println("focus: " + String(color_point.focus));
-            Serial.println("position: " + String(color_point.position));
-            Serial.println("r: " + String(color_point.color.r));
-            Serial.println("g: " + String(color_point.color.g));
-            Serial.println("b: " + String(color_point.color.b));
-        }
-        Serial.println("brightness.size(): " + String(gradient_level_pair.brightness.size()));
-        for (const auto& curve_point : gradient_level_pair.brightness) {
-            Serial.println("X: " + String(curve_point.X));
-            Serial.println("Y: " + String(curve_point.Y));
-        }
-    }
-
-    // Serialize float 1.0 as bytes
-    float f = 1.0;
-    uint8_t bytes[sizeof(float)];
-    memcpy(bytes, &f, sizeof(float));
-    for (int i = 0; i < sizeof(float); i++) {
-        Serial.println(bytes[i], HEX);
     }
 }

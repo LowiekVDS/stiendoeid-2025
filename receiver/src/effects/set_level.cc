@@ -4,7 +4,7 @@
 
 namespace effects {
 
-static SetLevel::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+SetLevel::Config SetLevel::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     if (size != 3) {
         return SetLevel::Config{};
     }

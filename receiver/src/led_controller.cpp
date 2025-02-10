@@ -8,34 +8,18 @@
 
 /**
  * Format of a sequence file.
- * 
+ *
  * Per line:
  * - 2 bytes: length of this iteration in steps.
- * - 1 byte: number of effect objects
+ * - 1 byte: number of effect objects to alter
  * - For each effect object:
+ *     - 1 byte: effect ID
  *     - 1 byte: effect type
  *     - 2 bytes: start led number
- *     - 2 bytes: end led number 
- *     - 1 byte: length of configuration (=N)
+ *     - 2 bytes: end led number
+ *     - 2 byte: length of configuration (=N)
  *     - N bytes: configuration
  */
-
-namespace {
-
-enum EffectType {
-    Alternating,
-    CandleFlicker,
-    Chase,
-    Dissolve,
-    LipSync,
-    Pulse,
-    SetLevel,
-    Spin,
-    Twinkle,
-    Wipe
-};
-
-} // namespace
 
 LedController* LedController::Create(const Config &config) {
     LedController* led_controller = new LedController();
@@ -96,55 +80,119 @@ void LedController::StepSequence(bool update_leds) {
         sequence_file_.seek(0);
         step_ = 0;
         next_update_step_ = 0;
+        Serial.println("Restarting sequence");
     }
 
+    bool print = false;
     if (step_ == next_update_step_) {
-
-        for (int i = 0; i < num_actual_effects_; ++i) {
-            delete effects_[i];
-        }
-
-        uint16_t delta_length; 
+        print = true;
+        uint16_t delta_length;
         sequence_file_.read((uint8_t*)&delta_length, 2);
-        uint8_t num_effects;
-        sequence_file_.read(&num_effects, 1);
 
-        for (int i = 0; i < num_effects; ++i) {
+        uint8_t num_effects_to_update;
+        sequence_file_.read(&num_effects_to_update, 1);
+
+        // Serial.println("Step: " + String(step_));
+        // Serial.println("Delta length: " + String(delta_length));
+        // Serial.println("Num effects to update: " + String(num_effects_to_update));
+
+        // make a map of effect_ids that have been updated
+        std::vector<int> updated_effect_ids;
+
+        for (int i = 0; i < num_effects_to_update; ++i) {
+            uint8_t effect_id;
+            sequence_file_.read(&effect_id, 1);
+
+            updated_effect_ids.push_back(effect_id);
+
+            if (effects_[effect_id] != nullptr) {
+                effects_[effect_id]->ClearLeds();
+                delete effects_[effect_id];
+                effects_[effect_id] = nullptr;
+            }
+
             uint8_t effect_type;
             sequence_file_.read(&effect_type, 1);
             uint16_t start_led;
             sequence_file_.read((uint8_t*)&start_led, 2);
             uint16_t end_led;
             sequence_file_.read((uint8_t*)&end_led, 2);
-            uint8_t config_length;
-            sequence_file_.read(&config_length, 1);
+            uint16_t config_length;
+            sequence_file_.read((uint8_t*)&config_length, 2);
             uint8_t config_as_bytes[config_length];
             sequence_file_.read(config_as_bytes, config_length);
-            
-            if (effect_type == EffectType::Alternating) {
-                effects::Alternating::Config config;
-                assert(config_length == sizeof(effects::Alternating::Config));
-                sequence_file_.read((uint8_t*)&config, config_length);
-                effects_[i] = new effects::Alternating(config, leds_ + start_led, end_led - start_led + 1);
-            } else if (effect_type == EffectType::SetLevel) {
-                effects::SetLevel::Config config;
-                assert(config_length == sizeof(effects::SetLevel::Config));
-                sequence_file_.read((uint8_t*)&config, config_length);
-                effects_[i] = new effects::SetLevel(config, leds_ + start_led, end_led - start_led + 1);
-            } else {
-                // By default, set black because not supported :(.
-                const effects::SetLevel::Config config = {CRGB::Black};
-                effects_[i] = new effects::SetLevel(config, leds_ + start_led, end_led - start_led + 1);
+
+            // Serial.println("Effect ID: " + String(effect_id));
+            // Serial.println("Effect type: " + String(effect_type));
+            // Serial.println("Start led: " + String(start_led));
+            // Serial.println("End led: " + String(end_led));
+            // Serial.println("Config length: " + String(config_length));
+            // Serial.print("Config: ");
+            // for (int i = 0; i < config_length; ++i) {
+            //     Serial.print(String(config_as_bytes[i], HEX) + " ");
+            // }
+            // Serial.println();
+
+            switch(effect_type) {
+            case EffectType::Alternating:
+                effects_[effect_id] = new effects::Alternating(effects::Alternating::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::Chase:
+                effects_[effect_id] = new effects::Chase(effects::Chase::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::Dissolve:
+                effects_[effect_id] = new effects::Dissolve(effects::Dissolve::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::Pulse:
+                effects_[effect_id] = new effects::Pulse(effects::Pulse::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::SetLevel:
+                effects_[effect_id] = new effects::SetLevel(effects::SetLevel::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::Strobe:
+                effects_[effect_id] = new effects::Strobe(effects::Strobe::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
+                break;
+            case EffectType::Twinkle:
+                effects_[effect_id] = new effects::Twinkle(effects::Twinkle::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led );
+                break;
+            case None:
+            default:
+                effects_[effect_id] = new effects::SetLevel({0, 0, 0}, leds_ + start_led, end_led - start_led);
                 break;
             }
         }
 
+        // All effects that were not updated should be cleared
+        for (int i = 0; i < 256; ++i) {
+            if (std::find(updated_effect_ids.begin(), updated_effect_ids.end(), i) == updated_effect_ids.end()) {
+                if (effects_[i] != nullptr) {
+                    effects_[i]->ClearLeds();
+                    delete effects_[i];
+                    effects_[i] = nullptr;
+                }
+            }
+        }
+
         next_update_step_ += delta_length;
-        num_actual_effects_ = num_effects;
     }
 
-    for (int i = 0; i < num_actual_effects_; ++i) {
-        effects_[i]->update();    
+    for (int i = 0; i < 256; ++i) {
+        if (effects_[i] != nullptr) {
+            effects_[i]->update();
+        }
+    }
+
+    if (print) {
+
+        // Print first 20 leds
+        Serial.println("LEDS at step " + String(step_));
+        for (int i = 0; i < 20; ++i) {
+            Serial.print(String(leds_[i].r, HEX) + " ");
+            Serial.print(String(leds_[i].g, HEX) + " ");
+            Serial.print(String(leds_[i].b, HEX) + " ");
+            Serial.println();
+        }
+
     }
 
     if (update_leds) {

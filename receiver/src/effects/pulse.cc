@@ -4,7 +4,7 @@ namespace effects {
 
 Pulse::Pulse(const Config& config, CRGB* leds, int num_leds) : Effect(leds, num_leds), config_(config) {}
 
-static Pulse::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Pulse::Config Pulse::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     if (size < 1) {
         return Pulse::Config{};
     }
