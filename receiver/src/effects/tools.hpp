@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Arduino.h"
+
 #include <vector>
 #include <stdint.h>
 #include <vector>
@@ -20,8 +22,7 @@ float interpolate(float start, float end, float factor);
 
 float GetCurrentCurveY(const std::vector<CurvePoint>& curve, float position);
 
-// Returns a new pointer to the end of the parsed bytes
-template<typename T>
-int ParseVectorOfStructsFromBytes(const uint8_t* bytes, int size, std::vector<T>& structs);
+// Returns number of read bytes
+int ParseCurvePointVectorOfStructsFromBytes(const uint8_t* bytes, int size, std::vector<CurvePoint>& structs);
 
 } // namespace effects

@@ -29,7 +29,7 @@ class Twinkle : public Effect {
         GradientLevelPair color;
     };
 
-    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
+    static Twinkle::Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     Twinkle(const Config& config, CRGB* leds, int num_leds);
 

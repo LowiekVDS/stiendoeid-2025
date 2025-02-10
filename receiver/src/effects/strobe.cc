@@ -44,8 +44,8 @@ static Strobe::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
     config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
     config.cycle_time = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
 
-    offset += ParseVectorOfStructsFromBytes<CurvePoint>(bytes + offset, size - offset, config.cycle_variation);
-    offset += ParseVectorOfStructsFromBytes<CurvePoint>(bytes + offset, size - offset, config.on_time);
+    offset += ParseCurvePointVectorOfStructsFromBytes(bytes + offset, size - offset, config.cycle_variation);
+    offset += ParseCurvePointVectorOfStructsFromBytes(bytes + offset, size - offset, config.on_time);
     offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, config.color);
 
     return config;

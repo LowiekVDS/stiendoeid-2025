@@ -13,7 +13,7 @@ class SetLevel : public Effect {
       RGBColor color;
     };
 
-    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
+    static SetLevel::Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     SetLevel(const Config& config, CRGB* leds, int num_leds);
 

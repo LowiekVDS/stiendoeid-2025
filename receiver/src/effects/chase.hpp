@@ -26,7 +26,7 @@ class Chase : public Effect {
         GradientLevelPair color;
     };
 
-    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
+    static Chase::Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     Chase(const Config& config, CRGB* leds, int num_leds);
 

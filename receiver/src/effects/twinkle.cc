@@ -7,15 +7,19 @@ static Twinkle::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
     int offset = 0;
     config.interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
 
-    config.avg_pulse_interval = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
-    config.coverage = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
-    config.coverage_variation = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
+    memcpy(&config.avg_pulse_interval, bytes + offset, sizeof(float));
+    offset += sizeof(float);
+    memcpy(&config.coverage, bytes + offset, sizeof(float));
+    offset += sizeof(float);
+    memcpy(&config.coverage_variation, bytes + offset, sizeof(float));
+    offset += sizeof(float);
 
     config.min_brightness = bytes[offset++];
     config.max_brightness = bytes[offset++];
     
-    config.brightness_variation = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
-    
+    memcpy(&config.brightness_variation, bytes + offset, sizeof(float));
+    offset += sizeof(float);
+
     config.color_handling = static_cast<Twinkle::ColorHandling>(bytes[offset++]);
     offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, config.color);
     return config;

@@ -179,12 +179,44 @@ RGBColor GetCRGBColorFromGradientLevelPair(const GradientLevelPair& gradient_lev
     return adjusted_color;
 };
 
+namespace {
+
+int ParseColorPointVectorOfStructsFromBytes(const uint8_t* bytes, int size, std::vector<ColorPoint>& structs) {
+    if (size <= 1) {
+        return 0;
+    }
+
+    constexpr int struct_size = 2 * sizeof(float) + 3;
+
+    int num_structs = bytes[0];
+    int structs_length = num_structs * struct_size;
+    if (size < structs_length + 1) {
+        return 0;
+    }
+
+    structs.clear();
+    for (int i = 0; i < num_structs; ++i) {
+        int offset = 1 + i * struct_size;
+        ColorPoint s;
+        memcpy(&s.focus, bytes + offset, sizeof(float));
+        memcpy(&s.position, bytes + offset + 4, sizeof(float));
+        s.color.r = bytes[offset + 8];
+        s.color.g = bytes[offset + 9];
+        s.color.b = bytes[offset + 10];
+        structs.push_back(s);
+    }
+
+    return structs_length + 1;
+}
+
+} // namespace
+
 int ParseGradientLevelPairFromBytes(const uint8_t* bytes, int size, GradientLevelPair& gradient_level_pair) {
-    int offset = ParseVectorOfStructsFromBytes<ColorPoint>(bytes, size, gradient_level_pair.colorGradient.color_points);
+    int offset = ParseColorPointVectorOfStructsFromBytes(bytes, size, gradient_level_pair.colorGradient.color_points);
     if (offset == 0) {
         return 0;
     }
-    offset += ParseVectorOfStructsFromBytes<CurvePoint>(bytes + offset, size - offset, gradient_level_pair.brightness);
+    offset += ParseCurvePointVectorOfStructsFromBytes(bytes + offset, size - offset, gradient_level_pair.brightness);
     if (offset == 0) {
         gradient_level_pair.colorGradient.color_points.clear();
     }

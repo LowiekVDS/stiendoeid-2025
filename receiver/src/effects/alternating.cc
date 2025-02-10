@@ -1,3 +1,5 @@
+#include "Arduino.h"
+
 #include "alternating.hpp"
 #include "colors.hpp"
 
@@ -5,7 +7,7 @@ namespace effects {
 
 Alternating::Alternating(const Config& config, CRGB* leds, int num_leds) : Effect(leds, num_leds), config_(config) {}
 
-static Alternating::Config ParseConfigFromBytes(const uint8_t* bytes, int size) {
+Alternating::Config Alternating::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     Alternating::Config config;
     config.interval = bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3];
     config.is_static = bytes[4] == 1;

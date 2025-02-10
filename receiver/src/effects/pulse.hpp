@@ -14,7 +14,7 @@ class Pulse : public Effect {
         GradientLevelPair color;
     };
 
-    static Config ParseConfigFromBytes(const uint8_t* bytes, int size);
+    static Pulse::Config ParseConfigFromBytes(const uint8_t* bytes, int size);
 
     Pulse(const Config& config, CRGB* leds, int num_leds);
 
