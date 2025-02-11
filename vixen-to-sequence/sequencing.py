@@ -78,17 +78,21 @@ def serialize_sequence(sequences: List[SequenceItem]) -> bytes:
     
     return serialized_data
 
-# Example usage
-sequences = [
-    SequenceItem(0, 75, EffectObject(0, 0, 10, EffectType.SET_LEVEL, b'\xff\x00\x00')),
-    SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.SET_LEVEL, b'\x00\x00\xff')),
-    SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
-]
 
-serialized_data = serialize_sequence(sequences)
-print("final")
-print(serialized_data.hex(' '))
+if __name__ == "__main__":
 
-# Write this to sequence.bin
-with open('/home/lowiek/stiendoeid-2025/receiver/data/sequence.bin', 'wb') as f:
-    f.write(serialized_data)
+    from pathlib import Path
+
+    # Example usage
+    sequences = [
+        SequenceItem(0, 75, EffectObject(0, 0, 10, EffectType.SET_LEVEL, b'\xff\x00\x00')),
+        SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.SET_LEVEL, b'\x00\x00\xff')),
+        SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
+    ]
+
+    serialized_data = serialize_sequence(sequences)
+
+    # Write this to sequence.bin
+    path = Path(__file__).parent / "../receiver/data/sequence.bin"
+    with path.open('wb') as f:
+        f.write(serialized_data)

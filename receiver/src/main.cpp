@@ -72,9 +72,9 @@ void SequenceHandlingTaskFromSerial(void *params) {
 }
 
 void setup() {
-    // Serial.setRxBufferSize(4096);
-    // Serial.setTimeout(100000);
-    Serial.begin(115200);
+    Serial.setRxBufferSize(4096);
+    Serial.setTimeout(100000);
+    Serial.begin(921600);
 
     delay(2000);
 
@@ -123,7 +123,7 @@ void loop() {
 
         BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
         if (!xWasDelayed) {
-            //Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
+            Serial.println("[WARNING] TimeSyncHandlingTask was NOT delayed!");
         }
     }
 }

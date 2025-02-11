@@ -3,7 +3,7 @@
 #include "string.h"
 
 #define MOCK_RADIO false
-#define SERIAL_MODE false
+#define SERIAL_MODE true
 
 namespace config {
 
