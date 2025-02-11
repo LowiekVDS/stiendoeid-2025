@@ -32,6 +32,9 @@ void RadioTimeSource::Sync() {
         return;
     }
 
+    rx_status_led = !rx_status_led;
+    digitalWrite(config_.rx_status_led_pin, rx_status_led);
+
     unsigned long server_millis = *((uint32_t *)&buf);
     reference_millis_ = server_millis - millis(); 
 }

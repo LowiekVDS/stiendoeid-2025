@@ -10,6 +10,7 @@ constexpr auto kRadioRxPin = 4;
 constexpr auto kRadioSpeed = 6000;
 constexpr auto kRadioPayloadSize = 4;
 constexpr auto kRadioTxRate = 5.0;
+constexpr auto kRadioRxStatusLedPin = 3;
 
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
