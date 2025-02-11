@@ -96,7 +96,8 @@ void setup() {
     radio_time_source = RadioTimeSource::Create({
         config::kRadioRxPin,
         config::kRadioSpeed,
-        config::kRadioTxRate
+        config::kRadioTxRate,
+        config::kRadioRxStatusLedPin
     });
     if (radio_time_source == nullptr) {
         Serial.println("Failed to create radio time source");
