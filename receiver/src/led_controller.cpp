@@ -31,9 +31,16 @@ LedController* LedController::Create(const Config &config) {
     FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
     FastLED.setBrightness(config::kBrightness);
 
+    #ifdef ESP32S3
     if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
         return nullptr;
     }
+    #endif
+    #ifdef ESP32
+    if (!LittleFS.begin(true, "/littlefs")) {
+        return nullptr;
+    }
+    #endif
     led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
     if (!led_controller->sequence_file_) {
         return nullptr;
@@ -76,15 +83,15 @@ bool LedController::SetLedsFromBuffer(uint8_t* buffer, int buffer_size) {
 
 void LedController::StepSequence(bool update_leds) {
 
-    if (sequence_file_.position() == sequence_file_.size()) {
-        sequence_file_.seek(0);
-        step_ = 0;
-        next_update_step_ = 0;
-        Serial.println("Restarting sequence");
-    }
-
     bool print = false;
     if (step_ == next_update_step_) {
+        if (sequence_file_.position() == sequence_file_.size()) {
+            sequence_file_.seek(0);
+            step_ = 0;
+            next_update_step_ = 0;
+            Serial.println("Restarting sequence");
+        }
+        
         print = true;
         uint16_t delta_length;
         sequence_file_.read((uint8_t*)&delta_length, 2);
@@ -176,24 +183,26 @@ void LedController::StepSequence(bool update_leds) {
         next_update_step_ += delta_length;
     }
 
+    // Serial.println("Step: " + String(step_));
+
     for (int i = 0; i < 256; ++i) {
         if (effects_[i] != nullptr) {
             effects_[i]->update();
         }
     }
 
-    if (print) {
+    // if (print) {
 
-        // Print first 20 leds
-        Serial.println("LEDS at step " + String(step_));
-        for (int i = 0; i < 20; ++i) {
-            Serial.print(String(leds_[i].r, HEX) + " ");
-            Serial.print(String(leds_[i].g, HEX) + " ");
-            Serial.print(String(leds_[i].b, HEX) + " ");
-            Serial.println();
-        }
+    //     // Print first 20 leds
+    //     Serial.println("LEDS at step " + String(step_));
+    //     for (int i = 0; i < 20; ++i) {
+    //         Serial.print(String(leds_[i].r, HEX) + " ");
+    //         Serial.print(String(leds_[i].g, HEX) + " ");
+    //         Serial.print(String(leds_[i].b, HEX) + " ");
+    //         Serial.println();
+    //     }
 
-    }
+    // };
 
     if (update_leds) {
         FastLED.show();

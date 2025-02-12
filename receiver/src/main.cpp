@@ -43,9 +43,13 @@ void SequenceHandlingTask(void *params) {
         unsigned long time = millis();
 
         led_controller->StepSequence(true);
+
+        Serial.println("SequenceHandlingTask: sequence_millis == " + String(time));
         
-        unsigned time_to_sleep = period_millis - (millis() - time);
+        long time_to_sleep = period_millis - (millis() - time);
+        Serial.println("Time to sleep: " + String(time_to_sleep));
         if (time_to_sleep > 0) {
+            
             delay(time_to_sleep);
         } else {
             Serial.println("SequenceHandlingTask was NOT delayed!");
@@ -99,6 +103,7 @@ void setup() {
     }
 
     if (SERIAL_MODE) {
+        Serial.println("Starting SequenceHandlingTaskFromSerial");
         xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
                                         4096, NULL, 1, &sequence_handling_task_handle, 1);
     } else {

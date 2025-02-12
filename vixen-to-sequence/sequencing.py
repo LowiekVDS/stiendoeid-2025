@@ -54,11 +54,12 @@ def serialize_sequence(sequences: List[SequenceItem]) -> bytes:
         if new_active_effects != active_effects:
 
             # Serialize the previous state of active effects TODO
-            partial_data = struct.pack('<HB', step - activated_at_step, len(active_effects))
+            partial_data_header = struct.pack('<HB', step - activated_at_step, len(active_effects))
+            partial_data = b''
             for effect in active_effects:
                 partial_data += effect.effect.serialize()
-            print(f"Step {activated_at_step: <8} to {step: <8}: ", partial_data.hex(' '))
-            serialized_data += partial_data
+            print(f"Step {activated_at_step: <8} to {step: <8}: [", partial_data_header.hex(), "] ", partial_data.hex(' '))
+            serialized_data += partial_data_header + partial_data
 
             # Determine which effects have ended and remove their ids
             ended_effects = [effect for effect in active_effects if effect not in new_active_effects]
@@ -83,11 +84,24 @@ if __name__ == "__main__":
 
     from pathlib import Path
 
+    from effects import TwinkleConfig
+    from colors import *
+
+    config = TwinkleConfig(200, 10, 0.5, 0.3, 0, 15, 0.5, 1, 
+                GradientLevelPair(
+                    ColorGradient([
+                        ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+                        ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
+                        ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
+                    ]),
+                    [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
+                ))
+
     # Example usage
     sequences = [
-        SequenceItem(0, 75, EffectObject(0, 0, 10, EffectType.SET_LEVEL, b'\xff\x00\x00')),
-        SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.SET_LEVEL, b'\x00\x00\xff')),
-        SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
+        SequenceItem(0, 200, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
+        # SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.SET_LEVEL, b'\x00\x00\xff')),
+        # SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
     ]
 
     serialized_data = serialize_sequence(sequences)

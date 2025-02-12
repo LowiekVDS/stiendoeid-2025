@@ -32,6 +32,7 @@ Twinkle::Twinkle(const Config& config, CRGB* leds, int num_leds)
     for (int i = 0; i < num_leds_; ++i) {
         pulses_end_step_.push_back(0);
         pulses_start_step_.push_back(0);
+        lit_.push_back(false);
     }
 }
 
@@ -68,17 +69,20 @@ void Twinkle::update() {
 
     for (int i = 0; i < num_leds_; ++i) {
         if (pulses_end_step_[i] <= current_step_) {
-            if (random(100) < config_.coverage * 100) {
-                int actual_time = config_.avg_pulse_interval * (1 + config_.coverage_variation * (random(100) / 50.0 - 1));
-                pulses_end_step_[i] = current_step_ + actual_time;
-                pulses_start_step_[i] = current_step_;
+            int actual_time = config_.avg_pulse_interval * (1 + config_.coverage_variation * (random(100) / 50.0 - 1));
+            pulses_end_step_[i] = current_step_ + actual_time;
+            pulses_start_step_[i] = current_step_;
+            if (random(100) < config_.coverage * 100.0) {
+                lit_[i] = true;
+            } else {
+                lit_[i] = false;
             }
         }
     }   
 
     const int avg_brightness = (config_.min_brightness + config_.max_brightness) / 2;
     for (int i = 0; i < num_leds_; ++i) {
-        if (pulses_end_step_[i] > current_step_) {
+        if (pulses_end_step_[i] > current_step_ && lit_[i]) {
 
             float position;
             if (config_.color_handling == ColorHandling::kGradientThruEffect) {

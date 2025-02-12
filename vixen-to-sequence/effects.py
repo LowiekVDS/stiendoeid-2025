@@ -89,6 +89,6 @@ class TwinkleConfig:
     color: GradientLevelPair
 
     def serialize(self) -> bytes:
-        return (struct.pack('>IfffBBfB', self.interval, self.avg_pulse_interval, self.coverage, self.coverage_variation,
-                             self.min_brightness, self.max_brightness, self.brightness_variation, self.color_handling)
+        return (struct.pack('>I', self.interval) + struct.pack('<fff', self.avg_pulse_interval, self.coverage, self.coverage_variation)
+                             + struct.pack('>BB', self.min_brightness, self.max_brightness) + struct.pack('<f', self.brightness_variation) + struct.pack('>B', self.color_handling)
                 + self.color.serialize())
