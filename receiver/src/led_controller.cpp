@@ -31,16 +31,15 @@ LedController* LedController::Create(const Config &config) {
     FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(led_controller->leds_, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
     FastLED.setBrightness(config::kBrightness);
 
-    #ifdef ESP32S3
+    // ESP32S3
     if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
         return nullptr;
     }
-    #endif
-    #ifdef ESP32
-    if (!LittleFS.begin(true, "/littlefs")) {
-        return nullptr;
-    }
-    #endif
+    // ESP32
+    // if (!LittleFS.begin(true, "/littlefs")) {
+    //     return nullptr;
+    // }
+
     led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
     if (!led_controller->sequence_file_) {
         return nullptr;

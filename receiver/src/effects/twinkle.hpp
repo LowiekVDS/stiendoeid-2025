@@ -45,7 +45,4 @@ class Twinkle : public Effect {
     std::vector<int> pulses_end_step_;
 };
 
-} else {
-  pulses_end_step_[i] = current_step_ + config_.interval;
-  pulses_start_step_[i] = current_step_;}
 } // namespace effects

@@ -3,11 +3,9 @@
 #include "string.h"
 
 #define MOCK_RADIO false
-#define SERIAL_MODE false
+#define SERIAL_MODE true
 
-#define ESP32
-// #define ESP32S3
-
+#define CHIP ESP32S3 // ESP32
 
 namespace config {
 
@@ -19,17 +17,24 @@ constexpr auto kRadioTxRate = 5.0;
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
 constexpr auto kNumChannelsPerLed = 3;
-constexpr int kNumLeds[6] = {654, 0, 0, 0, 0, 0}; // {200, 200, 200, 54, 0, 0};
+constexpr int kNumLeds[6] = {200, 0, 200, 0, 200, 54};
 constexpr auto kTotalNumLeds = 654;
 
-#ifdef ESP32
-constexpr int kDataPin_1 = 25;
-constexpr int kDataPin_2 = 26;
+// ESP32
+// constexpr int kDataPin_1 = 25;
+// constexpr int kDataPin_2 = 26;
+// constexpr int kDataPin_3 = 15;
+// constexpr int kDataPin_4 = 16;
+// constexpr int kDataPin_5 = 17;
+// constexpr int kDataPin_6 = 18;
+
+// ESP32S3
+constexpr int kDataPin_1 = 6;
+constexpr int kDataPin_2 = 7;
 constexpr int kDataPin_3 = 15;
 constexpr int kDataPin_4 = 16;
 constexpr int kDataPin_5 = 17;
 constexpr int kDataPin_6 = 18;
-#endif
 
 constexpr auto kBrightness = 255;
 
