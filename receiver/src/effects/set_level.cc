@@ -15,7 +15,7 @@ SetLevel::Config SetLevel::ParseConfigFromBytes(const uint8_t* bytes, int size) 
 
 SetLevel::SetLevel(const Config& config, CRGB* leds, int num_leds) : Effect(leds, num_leds), config_(config) {
     for (int i = 0; i < num_leds_; i++) {
-        leds_[i] = CRGB(config_.color.r, config_.color.g, config_.color.b);
+        leds_[i] += CRGB(config_.color.r, config_.color.g, config_.color.b);
     }
 }
 

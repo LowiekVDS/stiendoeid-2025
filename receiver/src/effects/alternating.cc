@@ -43,7 +43,7 @@ void Alternating::update() {
         CRGB color = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
         
         for (int j = (i + offset_) % config_.colors.size(); j < num_leds_; j += config_.colors.size()) {
-            leds_[j] = color;
+            leds_[j] += color;
         }
     }
 

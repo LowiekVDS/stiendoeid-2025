@@ -63,9 +63,9 @@ void Dissolve::update() {
 
     for (int i = 0; i < num_leds_; i++) {
         if (i < num_leds_to_skip_from_start) {
-            leds_[led_mapping_[i]] = CRGB::Black;
+            leds_[led_mapping_[i]] += CRGB::Black;
         } else if (i >= num_leds_ - num_leds_to_skip_from_end) {
-            leds_[led_mapping_[i]] = CRGB::Black;
+            leds_[led_mapping_[i]] += CRGB::Black;
         } else {
             int color_index = 0;
             if (config_.alternate_colors) {
@@ -74,7 +74,7 @@ void Dissolve::update() {
                 color_index = color_mapping_[i];
             }
             const auto rgb_color = GetCRGBColorFromGradientLevelPair(config_.colors[color_index], position);
-            leds_[led_mapping_[i]] = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
+            leds_[led_mapping_[i]] += CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
         }
     }
 

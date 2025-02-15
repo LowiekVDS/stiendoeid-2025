@@ -26,11 +26,11 @@ void Strobe::update() {
         float on_time_position = static_cast<float>(cycle_step_) / static_cast<float>(current_on_time_);
         RGBColor color = GetCRGBColorFromGradientLevelPair(config_.color, on_time_position);
         for (int i = 0; i < num_leds_; ++i) {
-            leds_[i] = CRGB(color.r, color.g, color.b);
+            leds_[i] += CRGB(color.r, color.g, color.b);
         }
     } else {
         for (int i = 0; i < num_leds_; ++i) {
-            leds_[i] = CRGB::Black;
+            leds_[i] += CRGB::Black;
         }
     }
 

@@ -26,7 +26,7 @@ void Pulse::update() {
     const CRGB color = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
 
     for (int i = 0; i < num_leds_; ++i) {
-        leds_[i] = color;
+        leds_[i] += color;
     }
 
     ++current_step_;

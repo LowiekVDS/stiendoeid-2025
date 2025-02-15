@@ -47,7 +47,7 @@ void Twinkle::SetBackgroundColors() {
               static_cast<uint8_t>(color.g * brightness_factor),
               static_cast<uint8_t>(color.b * brightness_factor)
           };
-          leds_[i] = CRGB(min_brightness_color.r, min_brightness_color.g, min_brightness_color.b);
+          leds_[i] += CRGB(min_brightness_color.r, min_brightness_color.g, min_brightness_color.b);
       }
   } else {
       const auto color = GetCRGBColorFromGradientLevelPair(config_.color, 0.0);
@@ -58,7 +58,7 @@ void Twinkle::SetBackgroundColors() {
           static_cast<uint8_t>(color.b * brightness_factor)
       };
       for (int i = 0; i < num_leds_; ++i) {
-          leds_[i] = CRGB(min_brightness_color.r, min_brightness_color.g, min_brightness_color.b);
+          leds_[i] += CRGB(min_brightness_color.r, min_brightness_color.g, min_brightness_color.b);
       }
   }
 }
@@ -98,7 +98,7 @@ void Twinkle::update() {
                 static_cast<uint8_t>(color.g * brightness_factor / 255.0),
                 static_cast<uint8_t>(color.b * brightness_factor / 255.0)
             };
-            leds_[i] = CRGB(twinkle_color.r, twinkle_color.g, twinkle_color.b);
+            leds_[i] += CRGB(twinkle_color.r, twinkle_color.g, twinkle_color.b);
         }
     }
 

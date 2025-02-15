@@ -186,6 +186,10 @@ void LedController::StepSequence(bool update_leds) {
 
     // Serial.println("Step: " + String(step_));
 
+    for (int i = 0; i < config::kTotalNumLeds; ++i) {
+        leds_[i] = CRGB::Black;
+    }
+    
     for (int i = 0; i < 256; ++i) {
         if (effects_[i] != nullptr) {
             effects_[i]->update();
