@@ -159,10 +159,10 @@ def parse_from_tim(xml_filename: str):
 
     # TODO: parse the start led and end led from a file as well
     node_id_to_led_range = {
-        '167a3cf4-1763-4954-b926-3d866beb4706': (0, 200),
-        'b73ce993-9866-4bfe-8419-363d80993188': (200, 400),
-        '7e8c2286-86da-4c30-8438-b78ba59d989c': (400, 600),
-        'd4f73b37-d92e-429a-bf27-8ee82b1c0789': (600, 654),
+        '167a3cf4-1763-4954-b926-3d866beb4706': (0, 276),
+        'b73ce993-9866-4bfe-8419-363d80993188': (276, 504),
+        '7e8c2286-86da-4c30-8438-b78ba59d989c': (504, 582),
+        'd4f73b37-d92e-429a-bf27-8ee82b1c0789': (582, 654),
     }
 
     sequences = []
