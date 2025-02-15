@@ -40,9 +40,11 @@ LedController* LedController::Create(const Config &config) {
     //     return nullptr;
     // }
 
-    led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
-    if (!led_controller->sequence_file_) {
-        return nullptr;
+    if (!SERIAL_MODE) {
+        led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
+        if (!led_controller->sequence_file_) {
+            return nullptr;
+        }
     }
     for (int i = 0; i < 256; ++i) {
         led_controller->effects_[i] = nullptr;

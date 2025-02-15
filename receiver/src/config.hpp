@@ -17,7 +17,7 @@ constexpr auto kRadioTxRate = 5.0;
 const String kCompressedSequenceFileLocation = "/sequence.bin";
 
 constexpr auto kNumChannelsPerLed = 3;
-constexpr int kNumLeds[6] = {200, 0, 200, 0, 200, 54};
+constexpr int kNumLeds[6] = {276, 0, 228, 0, 78, 72};
 constexpr auto kTotalNumLeds = 654;
 
 // ESP32
@@ -29,14 +29,14 @@ constexpr auto kTotalNumLeds = 654;
 // constexpr int kDataPin_6 = 18;
 
 // ESP32S3
-constexpr int kDataPin_1 = 6;
-constexpr int kDataPin_2 = 7;
-constexpr int kDataPin_3 = 15;
-constexpr int kDataPin_4 = 16;
+constexpr int kDataPin_1 = 7;
+constexpr int kDataPin_2 = 6;
+constexpr int kDataPin_3 = 16;
+constexpr int kDataPin_4 = 15;
 constexpr int kDataPin_5 = 17;
 constexpr int kDataPin_6 = 18;
 
-constexpr auto kBrightness = 255;
+constexpr auto kBrightness = 125;
 
 // Note: de frequentie is beperkt door de maximale aantal leds in een hardwarekanaal.
 // Meerbepaald moet dit gelden: kUpdateFrequency < 25000 / (max(kNumLeds[i == 1..6])) 
