@@ -98,9 +98,9 @@ void Twinkle::update() {
             const RGBColor color = GetCRGBColorFromGradientLevelPair(config_.color, position);
             const float brightness_factor = (config_.min_brightness + (config_.max_brightness - config_.min_brightness) * ((1.0 - config_.brightness_variation) / 2.0 + config_.brightness_variation * (random(100) / 100.0)));
             const auto twinkle_color = RGBColor{
-                static_cast<uint8_t>(color.r * brightness_factor),
-                static_cast<uint8_t>(color.g * brightness_factor),
-                static_cast<uint8_t>(color.b * brightness_factor)
+                static_cast<uint8_t>(color.r * brightness_factor / 255.0),
+                static_cast<uint8_t>(color.g * brightness_factor / 255.0),
+                static_cast<uint8_t>(color.b * brightness_factor / 255.0)
             };
             twinkle_colors_[i] = CRGB(twinkle_color.r, twinkle_color.g, twinkle_color.b);
         } else if (update_next) {

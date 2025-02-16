@@ -159,10 +159,10 @@ def parse_from_tim(xml_filename: str):
 
     # TODO: parse the start led and end led from a file as well
     node_id_to_led_range = {
-        '167a3cf4-1763-4954-b926-3d866beb4706': (0, 276),
-        'b73ce993-9866-4bfe-8419-363d80993188': (276, 504),
-        '7e8c2286-86da-4c30-8438-b78ba59d989c': (504, 582),
-        'd4f73b37-d92e-429a-bf27-8ee82b1c0789': (582, 654),
+        '167a3cf4-1763-4954-b926-3d866beb4706': (0, 20),
+        'b73ce993-9866-4bfe-8419-363d80993188': (20, 40),
+        '7e8c2286-86da-4c30-8438-b78ba59d989c': (40, 60),
+        'd4f73b37-d92e-429a-bf27-8ee82b1c0789': (60, 80),
     }
 
     sequences = []
@@ -199,63 +199,68 @@ def parse_from_tim(xml_filename: str):
         if effect_type != EffectType.SET_LEVEL and effect_type != EffectType.ALTERNATING:
             data_model_copy.interval = surrogate.end_time - surrogate.start_time
         
+        print(data_model_copy)
         effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
         
         sequences.append(SequenceItem(surrogate.start_time, surrogate.end_time, effect))
 
+    print(sequences)
+
     serialized_data = serialize_sequence(sequences)
     
+    print(f"Total size: {len(serialized_data)} bytes")
+
     path = Path(__file__).parent / "../receiver/data/sequence.bin"
     with path.open('wb') as f:
         f.write(serialized_data)
 
-# parse_from_tim('vanalles.tim')
+parse_from_tim('vanalles.tim')
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    from pathlib import Path
+#     from pathlib import Path
 
-    from effects import TwinkleConfig
-    from colors import *
+#     from effects import TwinkleConfig
+#     from colors import *
 
-    config = TwinkleConfig(200, 10, 0.5, 0.3, 0, 15, 0.5, 1, 
-                GradientLevelPair(
-                    ColorGradient([
-                        ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
-                        ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
-                        ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
-                    ]),
-                    [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
-                ))
+#     config = TwinkleConfig(200, 10, 0.5, 0.3, 0, 15, 0.5, 1, 
+#                 GradientLevelPair(
+#                     ColorGradient([
+#                         ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+#                         ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
+#                         ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
+#                     ]),
+#                     [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
+#                 ))
 
-    chase_config = ChaseConfig(
-        100,
-        1,
-        0,
-        [CurvePoint(0, 0), CurvePoint(0.5, 1), CurvePoint(1, 0)],
-        10,
-        GradientLevelPair(
-            ColorGradient([
-                ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
-                ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
-                ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
-            ]),
-            [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
-        )
-    )
+#     chase_config = ChaseConfig(
+#         100,
+#         1,
+#         0,
+#         [CurvePoint(0, 0), CurvePoint(0.5, 1), CurvePoint(1, 0)],
+#         10,
+#         GradientLevelPair(
+#             ColorGradient([
+#                 ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+#                 ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
+#                 ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
+#             ]),
+#             [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
+#         )
+#     )
         
-    # Example usage
-    sequences = [
-        SequenceItem(0, 100, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
-        #SequenceItem(0, 200, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
-        # SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.PULSE, b'\x00\x00\xff')),
-        # SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
-    ]
+#     # Example usage
+#     sequences = [
+#         SequenceItem(0, 100, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
+#         #SequenceItem(0, 200, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
+#         # SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.PULSE, b'\x00\x00\xff')),
+#         # SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
+#     ]
 
-    serialized_data = serialize_sequence(sequences)
+#     serialized_data = serialize_sequence(sequences)
 
-    # Write this to sequence.bin
-    path = Path(__file__).parent / "../receiver/data/sequence.bin"
-    with path.open('wb') as f:
-        f.write(serialized_data)
+#     # Write this to sequence.bin
+#     path = Path(__file__).parent / "../receiver/data/sequence.bin"
+#     with path.open('wb') as f:
+#         f.write(serialized_data)

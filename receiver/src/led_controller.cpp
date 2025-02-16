@@ -186,7 +186,6 @@ void LedController::StepSequence(bool update_leds) {
 
     // Serial.println("Step: " + String(step_));
 
-    Serial.println("Micros: " + String(micros()));
     for (int i = 0; i < config::kTotalNumLeds; ++i) {
         leds_[i] = CRGB::Black;
     }
@@ -197,7 +196,6 @@ void LedController::StepSequence(bool update_leds) {
         }
     }
 
-    Serial.println("Micros: " + String(micros()));
 
     // if (print) {
 
@@ -215,8 +213,6 @@ void LedController::StepSequence(bool update_leds) {
     if (update_leds) {
         FastLED.show();
     }
-
-    Serial.println("Micros: " + String(micros()));
 
     step_++;
 }

@@ -19,7 +19,7 @@ Chase::Config Chase::ParseConfigFromBytes(const uint8_t* bytes, int size) {
     config.color_handling = static_cast<Chase::ColorHandling>(bytes[offset++]);
     config.minimum_brightnes = bytes[offset++];
     offset += ParseCurvePointVectorOfStructsFromBytes(bytes + offset, size - offset, config.direction);
-    config.pulse_overlap = bytes[offset++];
+    config.pulse_overlap = bytes[offset++] << 24 | bytes[offset++] << 16 | bytes[offset++] << 8 | bytes[offset++];
     offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, config.color);
     return config;
 }
@@ -83,7 +83,7 @@ void Chase::update() {
     const int led_start = current_led_ - std::floor((config_.pulse_overlap / 2.0) / steps_per_cycle == 0 ? 1 : steps_per_cycle);
     const int led_end = current_led_ + std::ceil((config_.pulse_overlap / 2.0) / steps_per_cycle == 0 ? 1 : steps_per_cycle);
     for (int i = led_start; i <= led_end; ++i) {
-        leds_[i] = CRGB(color.r, color.g, color.b);
+        leds_[i] += CRGB(color.r, color.g, color.b);
     }
 
     ++current_step_;

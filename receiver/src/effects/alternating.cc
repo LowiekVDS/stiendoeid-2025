@@ -27,7 +27,7 @@ Alternating::Config Alternating::ParseConfigFromBytes(const uint8_t* bytes, int 
 
 void Alternating::update() {
     if (config_.is_static) {
-        return;
+        current_step_ = 0;
     }
 
     // When the current step is greater than the interval, change the offset

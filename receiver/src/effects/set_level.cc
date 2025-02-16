@@ -19,6 +19,10 @@ SetLevel::SetLevel(const Config& config, CRGB* leds, int num_leds) : Effect(leds
     }
 }
 
-void SetLevel::update() {}
+void SetLevel::update() {
+    for (int i = 0; i < num_leds_; i++) {
+        leds_[i] += CRGB(config_.color.r, config_.color.g, config_.color.b);
+    }
+}
 
 } // namespace effects

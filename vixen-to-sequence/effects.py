@@ -14,7 +14,7 @@ class AlternatingConfig:
 
     def parse_from_xml(xml_element) -> 'AlternatingConfig':
         interval = round(int(xml_element.find(".//Interval", namespaces={}).text) * MS_TO_STEP)
-        is_static = bool(xml_element.find(".//EnableStatic", namespaces={}).text)
+        is_static = bool(xml_element.find(".//EnableStatic", namespaces={}).text == "true")
         colors = [GradientLevelPair.parse_from_xml(gradient_level_pair_elem) for gradient_level_pair_elem in xml_element.findall(".//GradientLevelPair", namespaces={})]
         return AlternatingConfig(interval, is_static, colors)
 
@@ -33,7 +33,7 @@ class ChaseConfig:
 
     def parse_from_xml(xml_element) -> 'AlternatingConfig':
         direction = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in xml_element.find(".//ChaseMovement", namespaces={}).findall(".//PointPair", namespaces={})]
-        
+        direction.sort(key=lambda x: x.x)
         color_gradient = ColorGradient.parse_from_xml(xml_element.find(".//ColorGradient", namespaces={}))
         brightness = [CurvePoint(0, 1), CurvePoint(1, 1)]
         color = GradientLevelPair(color_gradient, brightness)
@@ -69,7 +69,9 @@ class DissolveConfig:
         random_color_order = bool(xml_element.find(".//RandomColor", namespaces={}).text)
         alternate_colors = not random_color_order
         colors = [GradientLevelPair.parse_from_xml(gradient_level_pair_elem) for gradient_level_pair_elem in xml_element.findall(".//GradientLevelPair", namespaces={})]
-        density = [CurvePoint.parse_from_xml(density_elem) for density_elem in xml_element.findall(".//DissolveCurve", namespaces={})]
+        dissolve_curve_elem = xml_element.find(".//DissolveCurve", namespaces={})
+        density = [CurvePoint.parse_from_xml(density_elem) for density_elem in dissolve_curve_elem.findall(".//PointPair", namespaces={})]
+        density.sort(key=lambda x: x.x)
 
         return DissolveConfig(0, is_random, flip, both_directions, random_color_order, alternate_colors, density, colors)
 
@@ -89,12 +91,16 @@ class PulseConfig:
         color_gradient = ColorGradient.parse_from_xml(xml_element.find(".//ColorGradient", namespaces={}))
         level_curve_elem = xml_element.find(".//LevelCurve", namespaces={})
         brightness_curve = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in level_curve_elem.findall(".//PointPair", namespaces={})]
+        brightness_curve.sort(key=lambda x: x.x)
 
         color = GradientLevelPair(color_gradient, brightness_curve)
     
         return PulseConfig(0, color)
 
     def serialize(self) -> bytes:
+        print(self.interval)
+        print(self.color.serialize())
+        print("Done")
         return struct.pack('>I', self.interval) + self.color.serialize()
 
 @dataclass
@@ -103,9 +109,9 @@ class SetLevelConfig:
 
     def parse_from_xml(xml_element) -> 'SetLevelConfig':
         color = RGBColor(
-            int(xml_element.find(".//_r", namespaces={}).text),
-            int(xml_element.find(".//_g", namespaces={}).text),
-            int(xml_element.find(".//_b", namespaces={}).text)
+            int(xml_element.find(".//_r", namespaces={}).text) * 255,
+            int(xml_element.find(".//_g", namespaces={}).text) * 255,
+            int(xml_element.find(".//_b", namespaces={}).text) * 255
         )
         return SetLevelConfig(color)
     
@@ -122,10 +128,12 @@ class StrobeConfig:
 
     def parse_from_xml(xml_element) -> 'StrobeConfig':
         on_time = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in xml_element.find(".//OnTimeCurve", namespaces={}).findall(".//PointPair", namespaces={})]
+        on_time.sort(key=lambda x: x.x)
         cycle_variation = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in xml_element.find(".//CycleVariationCurve", namespaces={}).findall(".//PointPair", namespaces={})]
         cycle_time = round(int(xml_element.find(".//CycleTime", namespaces={}).text) * MS_TO_STEP)
 
         intensity = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in xml_element.find(".//IntensityCurve", namespaces={}).findall(".//PointPair", namespaces={})]
+        intensity.sort(key=lambda x: x.x)
         color_gradient = ColorGradient.parse_from_xml(xml_element.find(".//Colors", namespaces={}))
         color = GradientLevelPair(color_gradient, intensity)
 
@@ -161,6 +169,7 @@ class TwinkleConfig:
 
         color_gradient = ColorGradient.parse_from_xml(xml_element.find(".//ColorGradient", namespaces={}))
         brightness_curve = [CurvePoint(0, 1), CurvePoint(1, 1)]
+        brightness_curve.sort(key=lambda x: x.x)
         color = GradientLevelPair(color_gradient, brightness_curve)
 
         # TODO: color_handling

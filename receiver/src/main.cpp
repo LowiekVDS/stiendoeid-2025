@@ -22,45 +22,34 @@ using namespace effects;
 
 void SequenceHandlingTask(void *params) {
 
-    TickType_t xLastWakeTime;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     unsigned long reference_millis = 0;
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
     while (true) {
 
-        // xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
-        // const unsigned long radio_sequence_time_millis = reference_millis + millis();
+        xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
+        const unsigned long radio_sequence_time_millis = reference_millis + millis();
 
-        // unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
-        // if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-        //     while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-        //         led_controller->StepSequence(false);
-        //         local_sequence_time_millis = led_controller->Step() * period_millis;
-        //     }
-        // } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-        //     led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
-        // }
+        unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
+        if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+            while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+                led_controller->StepSequence(false);
+                local_sequence_time_millis = led_controller->Step() * period_millis;
+            }
+        } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+            led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
+        }
 
         unsigned long time = millis();
 
         led_controller->StepSequence(true);
 
-        Serial.println("SequenceHandlingTask: sequence_millis == " + String(time));
-        
-        long time_to_sleep = period_millis - (millis() - time);
-        Serial.println("Time to sleep: " + String(time_to_sleep));
-        if (time_to_sleep > 0) {
-            
-            delay(time_to_sleep);
-        } else {
-            Serial.println("SequenceHandlingTask was NOT delayed!");
+        BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
+        if (!xWasDelayed) {
+            Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+            Serial.println("xLastWakeTime: " + String(xLastWakeTime));
+            Serial.println(config::kUpdateFrequency);
         }
-
-        // BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
-        // if (!xWasDelayed) {
-        //     Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
-        //     Serial.println("xLastWakeTime: " + String(xLastWakeTime));
-        //     Serial.println(config::kUpdateFrequency);
-        // }
     }
 }
 

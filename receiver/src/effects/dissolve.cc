@@ -37,7 +37,7 @@ Dissolve::Config Dissolve::ParseConfigFromBytes(const uint8_t* bytes, int size) 
     config.alternate_colors = bytes[offset++];
 
     offset += ParseCurvePointVectorOfStructsFromBytes(bytes + offset, size - offset, config.density);
-    int num_colors = bytes[offset];
+    int num_colors = bytes[offset++];
     for (int i = 0; i < num_colors; ++i) {
         GradientLevelPair gradient_level_pair;
         offset += ParseGradientLevelPairFromBytes(bytes + offset, size - offset, gradient_level_pair);
