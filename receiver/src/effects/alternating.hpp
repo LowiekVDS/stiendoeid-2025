@@ -22,6 +22,7 @@ class Alternating : public Effect {
 
     Alternating(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes ~360us
     void update() override final;
 
   private:

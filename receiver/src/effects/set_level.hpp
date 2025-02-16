@@ -17,6 +17,7 @@ class SetLevel : public Effect {
 
     SetLevel(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes ~200us for 654 leds
     void update() override final;
 
   private:

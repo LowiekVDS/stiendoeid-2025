@@ -21,6 +21,7 @@ class Strobe : public Effect {
 
     Strobe(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes ~400us for 654 leds
     void update() override final;
 
   private:

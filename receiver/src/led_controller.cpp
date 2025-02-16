@@ -32,13 +32,13 @@ LedController* LedController::Create(const Config &config) {
     FastLED.setBrightness(config::kBrightness);
 
     // ESP32S3
-    if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
+    // if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
+        // return nullptr;
+    // }
+    // ESP32
+    if (!LittleFS.begin(true, "/littlefs")) {
         return nullptr;
     }
-    // ESP32
-    // if (!LittleFS.begin(true, "/littlefs")) {
-    //     return nullptr;
-    // }
 
     if (!SERIAL_MODE) {
         led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");
@@ -186,6 +186,7 @@ void LedController::StepSequence(bool update_leds) {
 
     // Serial.println("Step: " + String(step_));
 
+    Serial.println("Micros: " + String(micros()));
     for (int i = 0; i < config::kTotalNumLeds; ++i) {
         leds_[i] = CRGB::Black;
     }
@@ -195,6 +196,8 @@ void LedController::StepSequence(bool update_leds) {
             effects_[i]->update();
         }
     }
+
+    Serial.println("Micros: " + String(micros()));
 
     // if (print) {
 
@@ -212,6 +215,8 @@ void LedController::StepSequence(bool update_leds) {
     if (update_leds) {
         FastLED.show();
     }
+
+    Serial.println("Micros: " + String(micros()));
 
     step_++;
 }

@@ -3,7 +3,7 @@
 #include "string.h"
 
 #define MOCK_RADIO false
-#define SERIAL_MODE true
+#define SERIAL_MODE false
 
 #define CHIP ESP32S3 // ESP32
 
@@ -21,20 +21,20 @@ constexpr int kNumLeds[6] = {276, 0, 228, 0, 78, 72};
 constexpr auto kTotalNumLeds = 654;
 
 // ESP32
-// constexpr int kDataPin_1 = 25;
-// constexpr int kDataPin_2 = 26;
-// constexpr int kDataPin_3 = 15;
-// constexpr int kDataPin_4 = 16;
-// constexpr int kDataPin_5 = 17;
-// constexpr int kDataPin_6 = 18;
-
-// ESP32S3
-constexpr int kDataPin_1 = 7;
-constexpr int kDataPin_2 = 6;
-constexpr int kDataPin_3 = 16;
-constexpr int kDataPin_4 = 15;
+constexpr int kDataPin_1 = 25;
+constexpr int kDataPin_2 = 26;
+constexpr int kDataPin_3 = 15;
+constexpr int kDataPin_4 = 16;
 constexpr int kDataPin_5 = 17;
 constexpr int kDataPin_6 = 18;
+
+// ESP32S3
+// constexpr int kDataPin_1 = 7;
+// constexpr int kDataPin_2 = 6;
+// constexpr int kDataPin_3 = 16;
+// constexpr int kDataPin_4 = 15;
+// constexpr int kDataPin_5 = 17;
+// constexpr int kDataPin_6 = 18;
 
 constexpr auto kBrightness = 125;
 

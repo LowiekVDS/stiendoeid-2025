@@ -173,6 +173,7 @@ RGBColor ApplyBrightnessCurve(const RGBColor& color, const std::vector<CurvePoin
     };
 }
 
+// 125 us per call
 RGBColor GetCRGBColorFromGradientLevelPair(const GradientLevelPair& gradient_level_pair, float position) {
     RGBColor color = GetColorAt(gradient_level_pair.colorGradient, position);
     RGBColor adjusted_color = ApplyBrightnessCurve(color, gradient_level_pair.brightness, position);

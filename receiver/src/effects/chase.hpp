@@ -30,6 +30,7 @@ class Chase : public Effect {
 
     Chase(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes ~100us
     void update() override final;
 
   private:

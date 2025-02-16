@@ -43,6 +43,8 @@ class Twinkle : public Effect {
     std::vector<int> pulses_start_step_;
     std::vector<bool> lit_;
     std::vector<int> pulses_end_step_;
+    std::vector<CRGB> background_colors_;
+    std::vector<CRGB> twinkle_colors_;
 };
 
 } // namespace effects

@@ -62,10 +62,9 @@ void Chase::update() {
         current_step_ = 0;
     }
 
-    // TODO: overlap
-
-    const auto steps_per_cycle = config_.interval / num_leds_;
-    if (current_step_ % steps_per_cycle == 0) {
+    auto steps_per_cycle = config_.interval / num_leds_;
+    steps_per_cycle = clamp(steps_per_cycle, 1, config_.interval);
+    if (current_step_ % steps_per_cycle == 0 || steps_per_cycle == 0) {
         const float position = static_cast<float>(current_step_) / static_cast<float>(config_.interval);
         const float direction = GetCurrentCurveY(config_.direction, position);
         current_led_ = std::round(direction * num_leds_);
@@ -78,11 +77,11 @@ void Chase::update() {
         const float position = static_cast<float>(current_led_) / static_cast<float>(num_leds_);
         color = GetCRGBColorFromGradientLevelPair(config_.color, position);
     } else {
-        const float local_position = static_cast<float>(current_step_ % steps_per_cycle) / static_cast<float>(steps_per_cycle);
+        const float local_position = static_cast<float>(current_step_ % steps_per_cycle) / static_cast<float>(steps_per_cycle == 0 ? 1 : steps_per_cycle);
         color = GetCRGBColorFromGradientLevelPair(config_.color, local_position);
     }
-    const int led_start = current_led_ - std::floor((config_.pulse_overlap / 2.0) / steps_per_cycle);
-    const int led_end = current_led_ + std::ceil((config_.pulse_overlap / 2.0) / steps_per_cycle);
+    const int led_start = current_led_ - std::floor((config_.pulse_overlap / 2.0) / steps_per_cycle == 0 ? 1 : steps_per_cycle);
+    const int led_end = current_led_ + std::ceil((config_.pulse_overlap / 2.0) / steps_per_cycle == 0 ? 1 : steps_per_cycle);
     for (int i = led_start; i <= led_end; ++i) {
         leds_[i] = CRGB(color.r, color.g, color.b);
     }

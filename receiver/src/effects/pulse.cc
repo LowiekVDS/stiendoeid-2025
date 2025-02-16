@@ -21,7 +21,6 @@ void Pulse::update() {
         current_step_ = 0;
     }
     const float position = static_cast<float>(current_step_) / static_cast<float>(config_.interval);
-
     const auto rgb_color = GetCRGBColorFromGradientLevelPair(config_.color, position);
     const CRGB color = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
 

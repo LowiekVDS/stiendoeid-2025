@@ -27,12 +27,11 @@ class Dissolve : public Effect {
 
     Dissolve(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes 600us
     void update() override final;
 
   private:
-
-    void SetBackgroundColors();
-
+  
     Config config_;
     std::vector<int> led_mapping_;
     std::vector<int> color_mapping_;

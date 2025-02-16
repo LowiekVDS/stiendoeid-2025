@@ -18,6 +18,7 @@ class Pulse : public Effect {
 
     Pulse(const Config& config, CRGB* leds, int num_leds);
 
+    // Takes 300us
     void update() override final;
 
   private:
