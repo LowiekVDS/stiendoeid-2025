@@ -60,7 +60,7 @@ class SequenceItem:
     end_time: int # in steps
     effect: EffectObject
 
-def serialize_sequence(sequences: List[SequenceItem]) -> bytes:
+def serialize_sequence(sequences: List[SequenceItem]) -> (int, bytes):
 
     # We are going to step through the sequence and serialize each item
     max_step = 0
@@ -106,7 +106,7 @@ def serialize_sequence(sequences: List[SequenceItem]) -> bytes:
             active_effects = new_active_effects
             activated_at_step = step
     
-    return serialized_data
+    return (max_step, serialized_data)
 
 def parse_data_models(xml_element):
     data_models = []
@@ -206,12 +206,13 @@ def parse_from_tim(xml_filename: str):
 
     print(sequences)
 
-    serialized_data = serialize_sequence(sequences)
+    max_step, serialized_data = serialize_sequence(sequences)
     
     print(f"Total size: {len(serialized_data)} bytes")
 
     path = Path(__file__).parent / "../receiver/data/sequence.bin"
     with path.open('wb') as f:
+        f.write(struct.pack('<I', max_step))
         f.write(serialized_data)
 
 parse_from_tim('vanalles.tim')

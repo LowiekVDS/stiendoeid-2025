@@ -23,7 +23,8 @@ class LedController {
     bool SetLedsFromBuffer(uint8_t* buffer, int buffer_size);
 
     uint32_t Step() const { return step_; }
-    CRGB leds_[config::kTotalNumLeds]; 
+    uint32_t MaxSteps() const { return max_steps_; }
+    
   private:
 
     enum EffectType {
@@ -41,8 +42,10 @@ class LedController {
 
     LedController() = default;
 
+    CRGB leds_[config::kTotalNumLeds]; 
     effects::Effect* effects_[256] = {nullptr};
     File sequence_file_;
     uint32_t step_ = 0;
     uint32_t next_update_step_ = 0;
+    uint32_t max_steps_ = 0;
 };

@@ -23,24 +23,30 @@ using namespace effects;
 void SequenceHandlingTask(void *params) {
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    unsigned long reference_millis = 0;
+    // At this local time the server time is zero
+    unsigned long reference_millis = millis();
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
     while (true) {
 
-        xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
-        const unsigned long radio_sequence_time_millis = reference_millis + millis();
-
-        unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
-        if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-                led_controller->StepSequence(false);
-                local_sequence_time_millis = led_controller->Step() * period_millis;
-            }
-        } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
+        if (xQueueReceive(radio_time_queue_handle, &reference_millis, 0) == pdTRUE) {
+            // Serial.println("Received new reference millis: " + String(reference_millis));
         }
 
-        unsigned long time = millis();
+        // Radio sequence time is the sequence time on the server. So
+        const unsigned long radio_sequence_time_millis = millis() - reference_millis;
+        const unsigned long radio_sequence_time_steps = 
+            static_cast<uint32_t>(radio_sequence_time_millis / period_millis) % led_controller->MaxSteps();
+
+        unsigned long local_sequence_time_step = led_controller->Step();
+
+        if (radio_sequence_time_steps > local_sequence_time_step + config::kAllowedFrameDifference) {
+            while (radio_sequence_time_millis > local_sequence_time_step + config::kAllowedFrameDifference) {
+                led_controller->StepSequence(false);
+                local_sequence_time_step = led_controller->Step() * period_millis;
+            }
+        } else if (local_sequence_time_step > radio_sequence_time_steps + config::kAllowedFrameDifference) {
+            led_controller->SeekToStep(radio_sequence_time_steps);
+        }
 
         led_controller->StepSequence(true);
 
@@ -106,11 +112,11 @@ void loop() {
             auto input = Serial.readStringUntil('\n');
             auto millis = input.toInt();
             radio_time_source->RadioTimeMock(millis);     
+        } else if (!MOCK_RADIO) {
+            radio_time_source->Sync();
         }
 
-        radio_time_source->Sync();
-
-        Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis() + millis());
+        Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis());
 
         const unsigned long reference_millis = radio_time_source->GetReferenceMillis();
         xQueueOverwrite(radio_time_queue_handle, &reference_millis);

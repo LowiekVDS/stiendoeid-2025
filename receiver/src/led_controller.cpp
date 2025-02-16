@@ -50,12 +50,18 @@ LedController* LedController::Create(const Config &config) {
         led_controller->effects_[i] = nullptr;
     }
 
+    // Read first 4 bytes to get the max number of steps
+    uint32_t max_steps;
+    led_controller->sequence_file_.read((uint8_t*)&max_steps, 4);
+    led_controller->max_steps_ = max_steps;
+
     return led_controller;
 }
 
 void LedController::SeekToStep(uint32_t to_step) {
-    sequence_file_.seek(0);
+    sequence_file_.seek(4);
     step_ = 0;
+    next_update_step_ = 0;
     for (int i = 0; i < to_step; ++i) {
         StepSequence(false);
     }
@@ -87,7 +93,7 @@ void LedController::StepSequence(bool update_leds) {
     bool print = false;
     if (step_ == next_update_step_) {
         if (sequence_file_.position() == sequence_file_.size()) {
-            sequence_file_.seek(0);
+            sequence_file_.seek(4);
             step_ = 0;
             next_update_step_ = 0;
             Serial.println("Restarting sequence");
@@ -214,5 +220,11 @@ void LedController::StepSequence(bool update_leds) {
         FastLED.show();
     }
 
-    step_++;
+    step_++;    
 }
+
+
+/**
+ * Server: 0 - 2000; 0 - 2000; 0 - 2000
+ * 
+ */
