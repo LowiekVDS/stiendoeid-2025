@@ -109,9 +109,9 @@ class SetLevelConfig:
 
     def parse_from_xml(xml_element) -> 'SetLevelConfig':
         color = RGBColor(
-            int(xml_element.find(".//_r", namespaces={}).text) * 255,
-            int(xml_element.find(".//_g", namespaces={}).text) * 255,
-            int(xml_element.find(".//_b", namespaces={}).text) * 255
+            int(float(xml_element.find(".//_r", namespaces={}).text) * 255),
+            int(float(xml_element.find(".//_g", namespaces={}).text) * 255),
+            int(float(xml_element.find(".//_b", namespaces={}).text) * 255)
         )
         return SetLevelConfig(color)
     
@@ -146,6 +146,35 @@ class StrobeConfig:
                 + serialized_cycle_variation + struct.pack('>B', len(self.on_time)) 
                 + serialized_on_time + self.color.serialize())
 
+@dataclass
+class SpinConfig:
+    chase_config: ChaseConfig
+    num_revolutions: int
+
+    def parse_from_xml(xml_element) -> 'SpinConfig':
+        reverse_spin = xml_element.find(".//ReverseSpin", namespaces={}).text == "true"
+        direction = [CurvePoint(0, 0), CurvePoint(1, 1)]
+        if reverse_spin:
+            direction = [CurvePoint(0, 1), CurvePoint(1, 0)]
+
+        color_gradient = ColorGradient.parse_from_xml(xml_element.find(".//ColorGradient", namespaces={}))
+        brightness = [CurvePoint.parse_from_xml(point_pair_elem) for point_pair_elem in xml_element.find(".//PulseCurve", namespaces={}).findall(".//PointPair", namespaces={})]
+        brightness.sort(key=lambda x: x.x)
+        color = GradientLevelPair(color_gradient, brightness)
+
+        pulse_overlap = round(float(xml_element.find(".//PulseTime", namespaces={}).text) * MS_TO_STEP)
+
+        num_revolutions = int(xml_element.find(".//RevolutionCount", namespaces={}).text)
+
+        return SpinConfig(
+            ChaseConfig(
+                0, 0, 0, direction, pulse_overlap, color
+            ),
+            num_revolutions
+        )
+
+    def serialize(self) -> bytes:
+        return self.chase_config.serialize()
 @dataclass
 class TwinkleConfig:
     interval: int

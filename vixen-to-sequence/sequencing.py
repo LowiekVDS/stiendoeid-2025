@@ -21,9 +21,17 @@ class EffectType(IntEnum):
     SET_LEVEL = 5
     STROBE = 6
     TWINKLE = 7
+    SPIN = 8
 
 def time_to_steps(time: str) -> int:
-    time_as_seconds = float(time[2:-1])
+
+    time_stripped = time[2:-1]
+    if 'M' in time_stripped:
+        front, after = time_stripped.split('M')
+        time_as_seconds = float(front) * 60 + float(after)
+    else:
+        time_as_seconds = float(time[2:-1])
+
     return round(time_as_seconds * MS_TO_STEP * 1000.0)
 
 @dataclass
@@ -159,10 +167,12 @@ def parse_from_tim(xml_filename: str):
 
     # TODO: parse the start led and end led from a file as well
     node_id_to_led_range = {
-        '167a3cf4-1763-4954-b926-3d866beb4706': (0, 20),
-        'b73ce993-9866-4bfe-8419-363d80993188': (20, 40),
-        '7e8c2286-86da-4c30-8438-b78ba59d989c': (40, 60),
-        'd4f73b37-d92e-429a-bf27-8ee82b1c0789': (60, 80),
+        '9fef67a9-c96b-4c06-a2d5-f670b6ee16a7': (0, 276),
+        '3a378170-0cdb-441b-9534-3f3f6fb9098c': (276, 366),
+        '2a9141c8-7ff4-40eb-9496-c13add013514': (366, 504),
+        'dc07198f-27b8-40c0-9683-a422d2843212': (504, 546),
+        '846d0588-0899-4d73-926f-e46800667fb1': (546, 582),
+        '899653a8-0bf0-40ae-b0a1-f5fcf3c6c827': (582, 654),
     }
 
     sequences = []
@@ -191,18 +201,24 @@ def parse_from_tim(xml_filename: str):
             effect_type = EffectType.TWINKLE
         elif isinstance(data_model, ChaseConfig):
             effect_type = EffectType.CHASE
+        elif isinstance(data_model, SpinConfig):
+            effect_type = EffectType.SPIN
         else:
             print(f"Unknown effect type: {data_model}")
             continue
         start_led, end_led = node_id_to_led_range[surrogate.target_nodes[0]]
         data_model_copy = deepcopy(data_model)
-        if effect_type != EffectType.SET_LEVEL and effect_type != EffectType.ALTERNATING:
+        if effect_type != EffectType.SET_LEVEL and effect_type != EffectType.ALTERNATING and effect_type != EffectType.SPIN:
             data_model_copy.interval = surrogate.end_time - surrogate.start_time
-        
-        print(data_model_copy)
-        effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
-        
-        sequences.append(SequenceItem(surrogate.start_time, surrogate.end_time, effect))
+
+        if effect_type == EffectType.SPIN:
+            data_model_copy.chase_config.interval = (surrogate.end_time - surrogate.start_time) / data_model_copy.num_revolutions
+            for i in range(data_model_copy.num_revolutions):
+                effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
+                sequences.append(SequenceItem(surrogate.start_time + i * data_model_copy.chase_config.interval, surrogate.start_time + (i + 1) * data_model_copy.chase_config.interval, effect))
+        else:
+            effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
+            sequences.append(SequenceItem(surrogate.start_time, surrogate.end_time, effect))
 
     print(sequences)
 
@@ -215,7 +231,7 @@ def parse_from_tim(xml_filename: str):
         f.write(struct.pack('<I', max_step))
         f.write(serialized_data)
 
-parse_from_tim('vanalles.tim')
+parse_from_tim('sequence.tim')
 
 
 # if __name__ == "__main__":
@@ -225,43 +241,53 @@ parse_from_tim('vanalles.tim')
 #     from effects import TwinkleConfig
 #     from colors import *
 
-#     config = TwinkleConfig(200, 10, 0.5, 0.3, 0, 15, 0.5, 1, 
-#                 GradientLevelPair(
-#                     ColorGradient([
-#                         ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
-#                         ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
-#                         ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
-#                     ]),
-#                     [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
-#                 ))
+#     # config = TwinkleConfig(200, 10, 0.5, 0.3, 0, 15, 0.5, 1, 
+#     #             GradientLevelPair(
+#     #                 ColorGradient([
+#     #                     ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+#     #                     ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
+#     #                     ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
+#     #                 ]),
+#     #                 [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
+#     #             ))
 
-#     chase_config = ChaseConfig(
-#         100,
-#         1,
-#         0,
-#         [CurvePoint(0, 0), CurvePoint(0.5, 1), CurvePoint(1, 0)],
-#         10,
-#         GradientLevelPair(
-#             ColorGradient([
-#                 ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
-#                 ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
-#                 ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
-#             ]),
-#             [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
-#         )
-#     )
-        
+#     # chase_config = ChaseConfig(
+#     #     100,
+#     #     1,
+#     #     0,
+#     #     [CurvePoint(0, 0), CurvePoint(0.5, 1), CurvePoint(1, 0)],
+#     #     10,
+#     #     GradientLevelPair(
+#     #         ColorGradient([
+#     #             ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+#     #             ColorPoint(focus=0.5, position=0.5, color=RGBColor(0, 255, 0)),
+#     #             ColorPoint(focus=0.5, position=1, color=RGBColor(0, 0, 255))
+#     #         ]),
+#     #         [CurvePoint(0, 0), CurvePoint(0.1, 1), CurvePoint(0.9, 1), CurvePoint(1, 0)]
+#     #     )
+#     # )
+
+#     red_config = SetLevelConfig(RGBColor(255, 0, 0))
+#     blue_config = SetLevelConfig(RGBColor(0, 0, 255))
+#     green_config = SetLevelConfig(RGBColor(0, 255, 0))
+#     yellow_config = SetLevelConfig(RGBColor(255, 255, 0))
+#     purple_config = SetLevelConfig(RGBColor(255, 0, 255))
+#     lb_config = SetLevelConfig(RGBColor(0, 255, 100))
+
 #     # Example usage
 #     sequences = [
-#         SequenceItem(0, 100, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
-#         #SequenceItem(0, 200, EffectObject(0, 0, 654, EffectType.TWINKLE, config.serialize())),
-#         # SequenceItem(50, 100, EffectObject(0, 10, 20, EffectType.PULSE, b'\x00\x00\xff')),
-#         # SequenceItem(80, 100, EffectObject(0, 0, 5, EffectType.SET_LEVEL, b'\x00\xff\x00')),
+#         SequenceItem(0, 4000, EffectObject(0, 0, 276  , EffectType.SET_LEVEL, red_config.serialize())),
+#         SequenceItem(0, 4000, EffectObject(1, 276, 366, EffectType.SET_LEVEL, blue_config.serialize())),
+#         SequenceItem(0, 4000, EffectObject(2, 366, 504, EffectType.SET_LEVEL, green_config.serialize())),
+#         SequenceItem(0, 4000, EffectObject(3, 504, 546, EffectType.SET_LEVEL, yellow_config.serialize())),
+#         SequenceItem(0, 4000, EffectObject(4, 546, 582, EffectType.SET_LEVEL, purple_config.serialize())),
+#         SequenceItem(0, 4000, EffectObject(5, 582, 654, EffectType.SET_LEVEL, lb_config.serialize())),
 #     ]
 
-#     serialized_data = serialize_sequence(sequences)
+#     max_step, serialized_data = serialize_sequence(sequences)
 
 #     # Write this to sequence.bin
 #     path = Path(__file__).parent / "../receiver/data/sequence.bin"
 #     with path.open('wb') as f:
+#         f.write(struct.pack('<I', max_step))
 #         f.write(serialized_data)

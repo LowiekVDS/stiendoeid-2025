@@ -36,7 +36,7 @@ constexpr int kDataPin_4 = 15;
 constexpr int kDataPin_5 = 17;
 constexpr int kDataPin_6 = 18;
 
-constexpr auto kBrightness = 255;
+constexpr auto kBrightness = 128;
 
 // Note: de frequentie is beperkt door de maximale aantal leds in een hardwarekanaal.
 // Meerbepaald moet dit gelden: kUpdateFrequency < 25000 / (max(kNumLeds[i == 1..6])) 
