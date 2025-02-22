@@ -10,7 +10,7 @@ ser = serial.Serial(
 )
 
 is_on = False
-val = 0
+val = 40000
 import time
 if ser.isOpen():
     time.sleep(2)
@@ -33,8 +33,8 @@ if ser.isOpen():
             print(val)
             val += int((time.time() * 1000) - now_ms)
 
-            if val > 20000:
-                val = 0
+            if val > 50000:
+                val = 40000
 
             # If enter is pressed, then reset val to 0
             # Not blocking!

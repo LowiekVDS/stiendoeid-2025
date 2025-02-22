@@ -52,9 +52,9 @@ void SequenceHandlingTask(void *params) {
 
         BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
         if (!xWasDelayed) {
-            Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
-            Serial.println("xLastWakeTime: " + String(xLastWakeTime));
-            Serial.println(config::kUpdateFrequency);
+            // Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+            // Serial.println("xLastWakeTime: " + String(xLastWakeTime));
+            // Serial.println(config::kUpdateFrequency);
         }
     }
 }

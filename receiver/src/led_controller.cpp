@@ -11,7 +11,7 @@
  *
  * Per line:
  * - 2 bytes: length of this iteration in steps.
- * - 1 byte: number of effect objects to alter
+ * - 1 byte: number of effect objects to start
  * - For each effect object:
  *     - 1 byte: effect ID
  *     - 1 byte: effect type
@@ -19,6 +19,8 @@
  *     - 2 bytes: end led number
  *     - 2 byte: length of configuration (=N)
  *     - N bytes: configuration
+ * - 1 byte: num effects to stop (=Z)
+ * - Z bytes: effect IDs to stop
  */
 
 LedController* LedController::Create(const Config &config) {
@@ -90,7 +92,6 @@ bool LedController::SetLedsFromBuffer(uint8_t* buffer, int buffer_size) {
 
 void LedController::StepSequence(bool update_leds) {
 
-    bool print = false;
     if (step_ == next_update_step_) {
         if (sequence_file_.position() == sequence_file_.size()) {
             sequence_file_.seek(4);
@@ -98,8 +99,20 @@ void LedController::StepSequence(bool update_leds) {
             next_update_step_ = 0;
             Serial.println("Restarting sequence");
         }
+
+
+        uint8_t num_effects_to_stop;
+        sequence_file_.read(&num_effects_to_stop, 1);
+        for (int i = 0; i < num_effects_to_stop; ++i) {
+            uint8_t effect_id;
+            sequence_file_.read(&effect_id, 1);
+            if (effects_[effect_id] != nullptr) {
+                effects_[effect_id]->ClearLeds();
+                delete effects_[effect_id];
+                effects_[effect_id] = nullptr;
+            }
+        }
         
-        print = true;
         uint16_t delta_length;
         sequence_file_.read((uint8_t*)&delta_length, 2);
 
@@ -146,7 +159,7 @@ void LedController::StepSequence(bool update_leds) {
             //     Serial.print(String(config_as_bytes[i], HEX) + " ");
             // }
             // Serial.println();
-
+            
             switch(effect_type) {
             case EffectType::Alternating:
                 effects_[effect_id] = new effects::Alternating(effects::Alternating::ParseConfigFromBytes(config_as_bytes, config_length), leds_ + start_led, end_led - start_led);
@@ -173,21 +186,27 @@ void LedController::StepSequence(bool update_leds) {
             default:
                 effects_[effect_id] = new effects::SetLevel({0, 0, 0}, leds_ + start_led, end_led - start_led);
                 break;
-            }
+            }   
         }
 
-        // All effects that were not updated should be cleared
-        for (int i = 0; i < 256; ++i) {
-            if (std::find(updated_effect_ids.begin(), updated_effect_ids.end(), i) == updated_effect_ids.end()) {
-                if (effects_[i] != nullptr) {
-                    effects_[i]->ClearLeds();
-                    delete effects_[i];
-                    effects_[i] = nullptr;
-                }
-            }
-        }
+
+        // // All effects that were not updated should be cleared
+        // for (int i = 0; i < 256; ++i) {
+        //     if (std::find(updated_effect_ids.begin(), updated_effect_ids.end(), i) == updated_effect_ids.end()) {
+        //         if (effects_[i] != nullptr) {
+        //             effects_[i]->ClearLeds();
+        //             delete effects_[i];
+        //             effects_[i] = nullptr;
+        //         }
+        //     }
+        // }
 
         next_update_step_ += delta_length;
+    }
+
+    if (!update_leds) {
+        step_++;
+        return;
     }
 
     // Serial.println("Step: " + String(step_));
@@ -202,23 +221,7 @@ void LedController::StepSequence(bool update_leds) {
         }
     }
 
-
-    // if (print) {
-
-    //     // Print first 20 leds
-    //     Serial.println("LEDS at step " + String(step_));
-    //     for (int i = 0; i < 20; ++i) {
-    //         Serial.print(String(leds_[i].r, HEX) + " ");
-    //         Serial.print(String(leds_[i].g, HEX) + " ");
-    //         Serial.print(String(leds_[i].b, HEX) + " ");
-    //         Serial.println();
-    //     }
-
-    // };
-
-    if (update_leds) {
-        FastLED.show();
-    }
+    FastLED.show();
 
     step_++;    
 }

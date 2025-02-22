@@ -10,7 +10,7 @@ from copy import deepcopy
 from pathlib import Path
 
 
-MS_TO_STEP = 40.0 / 1000.0 # 40 steps per second
+MS_TO_STEP = 30.0 / 1000.0 # 40 steps per second
 
 class EffectType(IntEnum):
     NONE = 0
@@ -82,7 +82,9 @@ def serialize_sequence(sequences: List[SequenceItem]) -> (int, bytes):
         effect.effect.effect_id = idx
     active_ids = [effect.effect.effect_id for effect in active_effects]
 
-    serialized_data = b''
+    serialized_data = struct.pack('<B', 0)
+
+    activated_effects = []
 
     for step in range(1, max_step+1):
 
@@ -90,19 +92,33 @@ def serialize_sequence(sequences: List[SequenceItem]) -> (int, bytes):
         new_active_effects = [sequence for sequence in sequences if sequence.start_time <= step and sequence.end_time > step]
         if new_active_effects != active_effects:
 
-            # Serialize the previous state of active effects TODO
-            partial_data_header = struct.pack('<HB', step - activated_at_step, len(active_effects))
+            # Serialize the previous state of active effects
+            partial_data_header = struct.pack('<HB', step - activated_at_step, len(active_effects) - len(activated_effects))
             partial_data = b''
             for effect in active_effects:
-                partial_data += effect.effect.serialize()
-            print(f"Step {activated_at_step: <8} to {step: <8}: [", partial_data_header.hex(), "] ", partial_data.hex(' '))
+                if effect not in activated_effects:
+                    partial_data += effect.effect.serialize()
+                    activated_effects.append(effect)
+                else:
+                    pass
+            print(f"ADD {activated_at_step: <8} to {step: <8}: [", partial_data_header.hex(), "] ", partial_data.hex(' '))
             serialized_data += partial_data_header + partial_data
 
             # Determine which effects have ended and remove their ids
             ended_effects = [effect for effect in active_effects if effect not in new_active_effects]
+            ended_ids = []
             for effect in ended_effects:
                 active_ids.remove(effect.effect.effect_id)
+                ended_ids.append(effect.effect.effect_id)
                 effect.effect.effect_id = None
+                activated_effects.remove(effect)
+
+            partial_data_header = struct.pack('<B', len(ended_effects))
+            partial_data = b''
+            for effect_id in ended_ids:
+                partial_data += struct.pack('<B', effect_id)
+            print(f"REMOVE {activated_at_step: <8} to {step: <8}: [", partial_data_header.hex(), "] ", partial_data.hex(' '))
+            serialized_data += partial_data_header + partial_data
 
             # Determine which effects have started and give them an id
             started_effects = [effect for effect in new_active_effects if effect not in active_effects]
@@ -111,6 +127,13 @@ def serialize_sequence(sequences: List[SequenceItem]) -> (int, bytes):
                 effect.effect.effect_id = next(i for i in range(len(active_ids) + 1) if i not in active_ids)
                 active_ids.append(effect.effect.effect_id)
             
+            # partial_data_header = struct.pack('<HB', step - activated_at_step, len(started_effects))
+            # partial_data = b''
+            # for effect in started_effects:
+            #     partial_data += effect.effect.serialize()
+            # print(f"Step {activated_at_step: <8} to {step: <8}: [", partial_data_header.hex(), "] ", partial_data.hex(' '))
+            # serialized_data += partial_data_header + partial_data
+
             active_effects = new_active_effects
             activated_at_step = step
     
@@ -134,6 +157,8 @@ def parse_data_models(xml_element):
             data_model = TwinkleConfig.parse_from_xml(data_model_elem)
         elif data_model_type == 'd2p1ChaseData':
             data_model = ChaseConfig.parse_from_xml(data_model_elem)
+        elif data_model_type == 'd2p1SpinData':
+            data_model = SpinConfig.parse_from_xml(data_model_elem)
         else:
             print(f"Unknown data model type: {data_model_type}")
             continue
@@ -147,6 +172,10 @@ def parse_node_surrogates(xml_element):
     surrogates = []
     for node_surrogate_elem in xml_element.findall(".//EffectNodeSurrogate", namespaces={}):
         surrogate = EffectNodeSurrogate.parse_from_xml(node_surrogate_elem)
+
+        # if surrogate.start_time > 46 * 40 or surrogate.start_time < 29 * 40:
+        #     continue
+
         surrogates.append(surrogate)
     return surrogates
 
@@ -175,6 +204,8 @@ def parse_from_tim(xml_filename: str):
         '899653a8-0bf0-40ae-b0a1-f5fcf3c6c827': (582, 654),
     }
 
+    min_step = min([surrogate.start_time for surrogate in effect_node_surrogates])
+
     sequences = []
     for surrogate in effect_node_surrogates:
         data_model_instance_id = surrogate.instance_id
@@ -186,6 +217,7 @@ def parse_from_tim(xml_filename: str):
         if data_model is None:
             print(f"Could not find data model with id {data_model_instance_id}")
             continue
+        print(surrogate.instance_id)
         effect_type = None
         if isinstance(data_model, AlternatingConfig):
             effect_type = EffectType.ALTERNATING
@@ -212,15 +244,19 @@ def parse_from_tim(xml_filename: str):
             data_model_copy.interval = surrogate.end_time - surrogate.start_time
 
         if effect_type == EffectType.SPIN:
-            data_model_copy.chase_config.interval = (surrogate.end_time - surrogate.start_time) / data_model_copy.num_revolutions
+            continue
+            data_model_copy.chase_config.interval = int((surrogate.end_time - surrogate.start_time) / data_model_copy.num_revolutions)
+            effect_type = EffectType.CHASE
             for i in range(data_model_copy.num_revolutions):
+                print(f"Spin {i}")
                 effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
                 sequences.append(SequenceItem(surrogate.start_time + i * data_model_copy.chase_config.interval, surrogate.start_time + (i + 1) * data_model_copy.chase_config.interval, effect))
         else:
+            print("Start time: %d, End time: %d, Effect type: %d" % (surrogate.start_time, surrogate.end_time, effect_type))
             effect = EffectObject(0, start_led, end_led, effect_type, data_model_copy.serialize())
-            sequences.append(SequenceItem(surrogate.start_time, surrogate.end_time, effect))
+            sequences.append(SequenceItem(surrogate.start_time - min_step, surrogate.end_time - min_step, effect))
 
-    print(sequences)
+    # print(sequences)
 
     max_step, serialized_data = serialize_sequence(sequences)
     
@@ -267,21 +303,44 @@ parse_from_tim('sequence.tim')
 #     #     )
 #     # )
 
-#     red_config = SetLevelConfig(RGBColor(255, 0, 0))
-#     blue_config = SetLevelConfig(RGBColor(0, 0, 255))
-#     green_config = SetLevelConfig(RGBColor(0, 255, 0))
-#     yellow_config = SetLevelConfig(RGBColor(255, 255, 0))
-#     purple_config = SetLevelConfig(RGBColor(255, 0, 255))
-#     lb_config = SetLevelConfig(RGBColor(0, 255, 100))
+#     # red_config = SetLevelConfig(RGBColor(255, 0, 0))
+#     # blue_config = SetLevelConfig(RGBColor(0, 0, 255))
+#     # green_config = SetLevelConfig(RGBColor(0, 255, 0))
+#     # yellow_config = SetLevelConfig(RGBColor(255, 255, 0))
+#     # purple_config = SetLevelConfig(RGBColor(255, 0, 255))
+#     # lb_config = SetLevelConfig(RGBColor(0, 255, 100))
 
-#     # Example usage
+#     # # Example usage
+#     # sequences = [
+#     #     SequenceItem(0, 100, EffectObject(0, 0, 276  , EffectType.SET_LEVEL, red_config.serialize())),
+#     #     SequenceItem(0, 200, EffectObject(1, 276, 366, EffectType.SET_LEVEL, blue_config.serialize())),
+#     #     SequenceItem(50, 150, EffectObject(2, 366, 504, EffectType.SET_LEVEL, green_config.serialize())),
+#     #     # SequenceItem(0, 4000, EffectObject(3, 504, 546, EffectType.SET_LEVEL, yellow_config.serialize())),
+#     #     # SequenceItem(0, 4000, EffectObject(4, 546, 582, EffectType.SET_LEVEL, purple_config.serialize())),
+#     #     # SequenceItem(0, 4000, EffectObject(5, 582, 654, EffectType.SET_LEVEL, lb_config.serialize())),
+#     # ]
+
 #     sequences = [
-#         SequenceItem(0, 4000, EffectObject(0, 0, 276  , EffectType.SET_LEVEL, red_config.serialize())),
-#         SequenceItem(0, 4000, EffectObject(1, 276, 366, EffectType.SET_LEVEL, blue_config.serialize())),
-#         SequenceItem(0, 4000, EffectObject(2, 366, 504, EffectType.SET_LEVEL, green_config.serialize())),
-#         SequenceItem(0, 4000, EffectObject(3, 504, 546, EffectType.SET_LEVEL, yellow_config.serialize())),
-#         SequenceItem(0, 4000, EffectObject(4, 546, 582, EffectType.SET_LEVEL, purple_config.serialize())),
-#         SequenceItem(0, 4000, EffectObject(5, 582, 654, EffectType.SET_LEVEL, lb_config.serialize())),
+#         SequenceItem(0, 100, EffectObject(
+#             0,
+#             0,
+#             50,
+#             EffectType.ALTERNATING,
+#             AlternatingConfig(
+#                 15, False, 15, [GradientLevelPair(
+#                     ColorGradient([
+#                         ColorPoint(focus=0.5, position=0, color=RGBColor(255, 0, 0)),
+#                     ]),
+#                     [CurvePoint(0, 0), CurvePoint(1, 1)]
+#                 ),
+#                 GradientLevelPair(
+#                     ColorGradient([
+#                         ColorPoint(focus=0.5, position=0, color=RGBColor(0, 255, 0)),
+#                     ]),
+#                     [CurvePoint(0, 0), CurvePoint(1, 1)]
+#                 )]
+#             ).serialize()
+#         ))
 #     ]
 
 #     max_step, serialized_data = serialize_sequence(sequences)

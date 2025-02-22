@@ -15,6 +15,7 @@ class Alternating : public Effect {
     struct Config {
       int interval;
       bool is_static;
+      int group_level;
       std::vector<GradientLevelPair> colors;
     };
 

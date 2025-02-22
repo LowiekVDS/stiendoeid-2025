@@ -4,23 +4,25 @@ import struct
 
 from colors import *
 
-MS_TO_STEP = 40.0 / 1000.0 # 40 steps per second
+MS_TO_STEP = 25.0 / 1000.0 # 40 steps per second
 
 @dataclass
 class AlternatingConfig:
     interval: int
     is_static: bool
+    group_level: int
     colors: List[GradientLevelPair]
 
     def parse_from_xml(xml_element) -> 'AlternatingConfig':
         interval = round(int(xml_element.find(".//Interval", namespaces={}).text) * MS_TO_STEP)
         is_static = bool(xml_element.find(".//EnableStatic", namespaces={}).text == "true")
+        group_level = int(xml_element.find(".//GroupLevel", namespaces={}).text)
         colors = [GradientLevelPair.parse_from_xml(gradient_level_pair_elem) for gradient_level_pair_elem in xml_element.findall(".//GradientLevelPair", namespaces={})]
-        return AlternatingConfig(interval, is_static, colors)
+        return AlternatingConfig(interval, is_static, group_level, colors)
 
     def serialize(self) -> bytes:
         serialized_colors = b''.join(pair.serialize() for pair in self.colors)
-        return struct.pack('>IB', self.interval, self.is_static) + struct.pack('>B', len(self.colors)) + serialized_colors
+        return struct.pack('>IB', self.interval, self.is_static) + struct.pack('>B', self.group_level) + struct.pack('>B', len(self.colors)) + serialized_colors
 
 @dataclass
 class ChaseConfig:
@@ -41,10 +43,8 @@ class ChaseConfig:
         pulse_overlap = round(float(xml_element.find(".//PulseOverlap", namespaces={}).text) * MS_TO_STEP)
 
         # TODO: color_handling
-        # TODO: minimum_brightnes
-        # TODO: direction (check if correct)
 
-        return ChaseConfig(0, 0, 0, direction, pulse_overlap, color)
+        return ChaseConfig(0, 1, 0, direction, pulse_overlap, color)
 
     def serialize(self) -> bytes:
         serialized_direction = b''.join(point.serialize() for point in self.direction)
@@ -98,9 +98,6 @@ class PulseConfig:
         return PulseConfig(0, color)
 
     def serialize(self) -> bytes:
-        print(self.interval)
-        print(self.color.serialize())
-        print("Done")
         return struct.pack('>I', self.interval) + self.color.serialize()
 
 @dataclass

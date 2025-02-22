@@ -10,7 +10,6 @@ SetLevel::Config SetLevel::ParseConfigFromBytes(const uint8_t* bytes, int size) 
     }
     SetLevel::Config config;
     config.color = RGBColor{bytes[0], bytes[1], bytes[2]};
-    Serial.println("OK");
     return config;
 }
 

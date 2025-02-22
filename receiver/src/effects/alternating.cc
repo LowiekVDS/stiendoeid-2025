@@ -11,8 +11,14 @@ Alternating::Config Alternating::ParseConfigFromBytes(const uint8_t* bytes, int 
     Alternating::Config config;
     config.interval = bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3];
     config.is_static = bytes[4] == 1;
-    int num_colors = bytes[5];
-    int offset = 6;
+    config.group_level = bytes[5];
+
+    Serial.println("Interval: " + String(config.interval));
+    Serial.println("Is static: " + String(config.is_static));
+    Serial.println("Group level: " + String(config.group_level) + " " + String(bytes[5]));
+
+    int num_colors = bytes[6];
+    int offset = 7;
     for (int i = 0; i < num_colors; ++i) {
         GradientLevelPair gradient_level_pair;
         int extra_offset = ParseGradientLevelPairFromBytes(bytes + offset, size - offset, gradient_level_pair);
@@ -22,6 +28,7 @@ Alternating::Config Alternating::ParseConfigFromBytes(const uint8_t* bytes, int 
         offset += extra_offset;
         config.colors.push_back(gradient_level_pair);
     }
+    Serial.println("Num colors: " + String(num_colors));
     return config;
 }  
 
@@ -37,13 +44,17 @@ void Alternating::update() {
     }
 
     float position = static_cast<float>(current_step_) / static_cast<float>(config_.interval);
+
+    CRGB colors[config_.colors.size()];    
     for (int i = 0; i < config_.colors.size(); i++) {
         GradientLevelPair gradient_level_pair = config_.colors[i];
         auto rgb_color = GetCRGBColorFromGradientLevelPair(gradient_level_pair, position);
-        CRGB color = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
-        
-        for (int j = (i + offset_) % config_.colors.size(); j < num_leds_; j += config_.colors.size()) {
-            leds_[j] += color;
+        colors[i] = CRGB(rgb_color.r, rgb_color.g, rgb_color.b);
+    }
+
+    for (int i = 0; i < num_leds_; i += config_.group_level) {
+        for (int j = 0; j < config_.group_level; j++) {
+            leds_[i + j] = colors[(i + offset_) % config_.colors.size()];
         }
     }
 

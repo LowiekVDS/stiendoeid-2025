@@ -44,6 +44,7 @@ class LedController {
 
     CRGB leds_[config::kTotalNumLeds]; 
     effects::Effect* effects_[256] = {nullptr};
+    EffectType effect_types_[256] = {None};
     File sequence_file_;
     uint32_t step_ = 0;
     uint32_t next_update_step_ = 0;

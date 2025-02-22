@@ -44,4 +44,3 @@ if __name__ == "__main__":
     root = ET.fromstring(xml_data)
 
     data_models = parse_data_models(root.find(".//_dataModels", namespaces={}))
-    print(data_models)

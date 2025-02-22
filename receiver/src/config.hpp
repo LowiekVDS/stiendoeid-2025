@@ -36,12 +36,12 @@ constexpr int kDataPin_4 = 15;
 constexpr int kDataPin_5 = 17;
 constexpr int kDataPin_6 = 18;
 
-constexpr auto kBrightness = 128;
+constexpr auto kBrightness = 255;
 
 // Note: de frequentie is beperkt door de maximale aantal leds in een hardwarekanaal.
 // Meerbepaald moet dit gelden: kUpdateFrequency < 25000 / (max(kNumLeds[i == 1..6])) 
-constexpr auto kUpdateFrequency = 40.0;
+constexpr auto kUpdateFrequency = 25.0;
 
-constexpr auto kAllowedFrameDifference = 3;
+constexpr auto kAllowedFrameDifference = 10;
 
 } // namespace config
