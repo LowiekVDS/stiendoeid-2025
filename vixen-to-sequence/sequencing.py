@@ -172,10 +172,6 @@ def parse_node_surrogates(xml_element):
     surrogates = []
     for node_surrogate_elem in xml_element.findall(".//EffectNodeSurrogate", namespaces={}):
         surrogate = EffectNodeSurrogate.parse_from_xml(node_surrogate_elem)
-
-        # if surrogate.start_time > 46 * 40 or surrogate.start_time < 29 * 40:
-        #     continue
-
         surrogates.append(surrogate)
     return surrogates
 
