@@ -15,12 +15,14 @@ RadioTimeSource* RadioTimeSource::Create(const Config &config) {
     radio_time_source->config_ = config;
     radio_time_source->RadioTimeMock(0);
 
+    pinMode(3, OUTPUT);
+
     return radio_time_source;
 }
 
 void RadioTimeSource::Sync() {
 
-    receiver->waitAvailableTimeout(500);
+    receiver->waitAvailableTimeout(1000);
 
     uint8_t buf[4];
     uint8_t len = sizeof(buf);
@@ -32,6 +34,9 @@ void RadioTimeSource::Sync() {
         Serial.println("Received data of unexpected length");
         return;
     }
+
+    led_status_ = !led_status_;
+    digitalWrite(3, led_status_);
 
     unsigned long server_millis = *((uint32_t *)&buf);
     reference_millis_ = millis() - server_millis;

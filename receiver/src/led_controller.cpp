@@ -32,13 +32,13 @@ LedController* LedController::Create(const Config &config) {
     FastLED.setBrightness(config::kBrightness);
 
     // ESP32S3
-    // if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
-        // return nullptr;
-    // }
-    // ESP32
-    if (!LittleFS.begin(true, "/littlefs")) {
+    if (!LittleFS.begin(true, "/littlefs", 10, "ffat")) {
         return nullptr;
     }
+    // ESP32
+    // if (!LittleFS.begin(true, "/littlefs")) {
+    //     return nullptr;
+    // }
 
     if (!SERIAL_MODE) {
         led_controller->sequence_file_ = LittleFS.open(config.compressed_sequence_file_location, "r");

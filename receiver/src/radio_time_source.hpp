@@ -22,6 +22,7 @@ class RadioTimeSource {
     RadioTimeSource() = default;
     
     Config config_ = {};
+    bool led_status_ = false;
     unsigned long reference_millis_ = 0; // Equal to the local time point where the server time is zero
     RH_ASK* receiver = nullptr;
 };
