@@ -13,6 +13,9 @@ RadioTimeSource* RadioTimeSource::Create(const Config &config) {
     radio_time_source->receiver->setModeRx();
 
     radio_time_source->config_ = config;
+    radio_time_source->RadioTimeMock(0);
+
+    pinMode(3, OUTPUT);
 
     return radio_time_source;
 }
@@ -32,10 +35,13 @@ void RadioTimeSource::Sync() {
         return;
     }
 
+    led_status_ = !led_status_;
+    digitalWrite(3, led_status_);
+
     unsigned long server_millis = *((uint32_t *)&buf);
-    reference_millis_ = server_millis - millis(); 
+    reference_millis_ = millis() - server_millis;
 }
 
 void RadioTimeSource::RadioTimeMock(unsigned long sequence_millis) {
-    reference_millis_ = sequence_millis - millis();
+    reference_millis_ = millis() - sequence_millis;
 }

@@ -6,7 +6,7 @@
 #include "config.hpp"
 #include "radio_time_source.hpp"
 
-bool serial_mode = false;
+#include "effects/all.hpp"
 
 TaskHandle_t sequence_handling_task_handle;
 TaskHandle_t time_sync_handling_task_handle;
@@ -16,81 +16,66 @@ QueueHandle_t radio_time_queue_handle;
 RadioTimeSource* radio_time_source = nullptr;
 TickType_t xLastWakeTime;
 
-void SequenceHandlingTask(void *params) {
-    auto led_controller = LedController::Create({
-        config::kTotalNumLeds, 
-        config::kCompressedSequenceFileLocation
-    });
-    if (led_controller == nullptr) {
-        Serial.println("Failed to create led controller");
-        return;
-    }
+LedController* led_controller = nullptr;
 
-    TickType_t xLastWakeTime;
-    unsigned long reference_millis = 0;
+using namespace effects;
+
+void SequenceHandlingTask(void *params) {
+
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    // At this local time the server time is zero
+    unsigned long reference_millis = millis();
     constexpr double period_millis = 1000.0 / config::kUpdateFrequency;
     while (true) {
 
-        xQueueReceive(radio_time_queue_handle, &reference_millis, 0);
-        const unsigned long radio_sequence_time_millis = reference_millis + millis();
+        if (xQueueReceive(radio_time_queue_handle, &reference_millis, 0) == pdTRUE) {
+            // Serial.println("Received new reference millis: " + String(reference_millis));
+        }
 
-        unsigned long local_sequence_time_millis = led_controller->Step() * period_millis;
-        if (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            while (radio_sequence_time_millis > local_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
+        // Radio sequence time is the sequence time on the server. So
+        const unsigned long radio_sequence_time_millis = millis() - reference_millis;
+        const unsigned long radio_sequence_time_steps = 
+            static_cast<uint32_t>(radio_sequence_time_millis / period_millis) % led_controller->MaxSteps();
+
+        unsigned long local_sequence_time_step = led_controller->Step();
+
+        if (radio_sequence_time_steps > local_sequence_time_step + config::kAllowedFrameDifference) {
+            while (radio_sequence_time_millis > local_sequence_time_step + config::kAllowedFrameDifference) {
                 led_controller->StepSequence(false);
-                local_sequence_time_millis = led_controller->Step() * period_millis;
+                local_sequence_time_step = led_controller->Step() * period_millis;
             }
-        } else if (local_sequence_time_millis > radio_sequence_time_millis + config::kAllowedFrameDifference * period_millis) {
-            led_controller->SeekToStep(radio_sequence_time_millis / period_millis);
+        } else if (local_sequence_time_step > radio_sequence_time_steps + config::kAllowedFrameDifference) {
+            led_controller->SeekToStep(radio_sequence_time_steps);
         }
 
         led_controller->StepSequence(true);
-    
+
         BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000.0 / config::kUpdateFrequency));
         if (!xWasDelayed) {
-            Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+            // Serial.println("[WARNING] SequenceHandlingTask was NOT delayed!");
+            // Serial.println("xLastWakeTime: " + String(xLastWakeTime));
+            // Serial.println(config::kUpdateFrequency);
         }
     }
 }
 
 void SequenceHandlingTaskFromSerial(void *params) {
-    Serial.println("Serial mode starting.");
-    CRGB leds[config::kTotalNumLeds];
-    FastLED.addLeds<SK6812, config::kDataPin_1, GRB>(leds, 0, config::kNumLeds[0]);
-    FastLED.addLeds<SK6812, config::kDataPin_2, GRB>(leds, config::kNumLeds[0], config::kNumLeds[1]);
-    FastLED.addLeds<SK6812, config::kDataPin_3, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1], config::kNumLeds[2]);
-    FastLED.addLeds<SK6812, config::kDataPin_4, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2], config::kNumLeds[3]);
-    FastLED.addLeds<SK6812, config::kDataPin_5, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3], config::kNumLeds[4]);
-    FastLED.addLeds<SK6812, config::kDataPin_6, GRB>(leds, config::kNumLeds[0] + config::kNumLeds[1] + config::kNumLeds[2] + config::kNumLeds[3] + config::kNumLeds[4], config::kNumLeds[5]);
-    
-    Serial.println("Serial mode started.");
-
-    auto kNumChannels = config::kNumChannelsPerLed * config::kTotalNumLeds;
+    const int kNumChannels = config::kNumChannelsPerLed * config::kTotalNumLeds;
     uint8_t buffer[kNumChannels];
     while (true) {
-        Serial.readBytes(buffer, kNumChannels);
-        for (int i = 0; i < kNumChannels; i++) {
-            switch (i % 3) {
-            case 0:
-                leds[i / 3].r = buffer[i];
-                break;
-            case 1:
-                leds[i / 3].g = buffer[i];
-                break;
-            case 2:
-                leds[i / 3].b = buffer[i];
-                break;
-            }
+        Serial.readBytes(buffer, kNumChannels);    
+        if (!led_controller->SetLedsFromBuffer(buffer, kNumChannels)) {
+            Serial.println("Failed to set leds from buffer");
         }
-        FastLED.show();
-
-        vTaskDelay(pdMS_TO_TICKS(1));
-        Serial.println("Serial mode");
     }
 }
 
 void setup() {
+    Serial.setRxBufferSize(4096);
+    Serial.setTimeout(100000);
     Serial.begin(921600);
+
+    delay(2000);
 
     radio_time_queue_handle = xQueueCreate(1, sizeof(unsigned long));
     radio_time_source = RadioTimeSource::Create({
@@ -103,31 +88,35 @@ void setup() {
         while (true) {}
     }
 
-    xTaskCreatePinnedToCore(SequenceHandlingTask, "SequenceHandlingTask", 4096, NULL, 1, &sequence_handling_task_handle, 1);    
+    led_controller = LedController::Create({
+        config::kTotalNumLeds, 
+        config::kCompressedSequenceFileLocation
+    });
+    if (led_controller == nullptr) {
+        Serial.println("Failed to create led controller");
+        return;
+    }
+
+    if (SERIAL_MODE) {
+        Serial.println("Starting SequenceHandlingTaskFromSerial");
+        xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
+                                        4096, NULL, 1, &sequence_handling_task_handle, 1);
+    } else {
+        xTaskCreatePinnedToCore(SequenceHandlingTask, "SequenceHandlingTask", 4096, NULL, 1, &sequence_handling_task_handle, 1);
+    }
 }
 
 void loop() {
-    if (Serial.available() && !serial_mode) {
-        if (MOCK_RADIO) {
+    if (!SERIAL_MODE) {
+        if (MOCK_RADIO && Serial.available()) {
             auto input = Serial.readStringUntil('\n');
             auto millis = input.toInt();
             radio_time_source->RadioTimeMock(millis);     
-        } else {
-            Serial.println("Serial input detected, switching to manual mode");
-            
-            vTaskDelete(sequence_handling_task_handle);
-            xTaskCreatePinnedToCore(SequenceHandlingTaskFromSerial, "SequenceHandlingTaskFromSerial", 
-                                    4096, NULL, 1, &sequence_handling_task_handle, 1);
-
-            serial_mode = true;
+        } else if (!MOCK_RADIO) {
+            radio_time_source->Sync();
         }
-    }
 
-    if (!serial_mode) {
-
-        radio_time_source->Sync();
-
-        Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis() + millis());
+        Serial.printf("TimeSyncHandlingTask: sequence_millis == %lu\n", radio_time_source->GetReferenceMillis());
 
         const unsigned long reference_millis = radio_time_source->GetReferenceMillis();
         xQueueOverwrite(radio_time_queue_handle, &reference_millis);
